@@ -79,7 +79,8 @@ function updateCalendarEvents(data) {
                 date: item.date,
                 time: `${item.startTime} - ${item.endTime} น.`,
                 participants: item.participants,
-                responsible: item.responsible
+                responsible: item.responsible,
+                workHours: item.workHours
             }
         };
     });
@@ -93,17 +94,7 @@ function calculateWorkload(data) {
     let workloadMap = {};
 
     data.forEach(item => {
-        if (!item.startTime || !item.endTime) return;
-        
-        let [startH, startM] = item.startTime.split(':').map(Number);
-        let [endH, endM] = item.endTime.split(':').map(Number);
-        
-        let startTotalMins = (startH || 0) * 60 + (startM || 0);
-        let endTotalMins = (endH || 0) * 60 + (endM || 0);
-        
-        let durationHours = (endTotalMins - startTotalMins) / 60;
-        if (durationHours < 0) durationHours = 0;
-
+        let durationHours = Number(item.workHours) || 0;
         let responsibles = String(item.responsible || '').split(',').map(r => r.trim());
         let count = responsibles.length;
         let hoursPerPerson = count > 0 ? durationHours / count : durationHours;
