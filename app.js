@@ -45,7 +45,7 @@ function initCalendar() {
             week: 'สัปดาห์',
             list: 'กำหนดการ'
         },
-        events: [], // เริ่มต้นด้วยค่าว่าง แล้วจะใส่ข้อมูลทีหลังผ่าน updateCalendarEvents
+        events: [],
         eventClick: function(info) {
             showModal(info.event.extendedProps);
         }
@@ -98,7 +98,6 @@ function updateCalendarEvents(data) {
         };
     });
     
-    // ล้างข้อมูลเก่าและเพิ่มข้อมูลชุดใหม่เข้าไปตรงๆ
     calendar.removeAllEvents();
     events.forEach(ev => calendar.addEvent(ev));
     calendar.render();
@@ -211,7 +210,7 @@ async function submitForm(e) {
         await fetchActivityData();
         showSuccessModal();
     } catch (error) {
-        document.getElementById('activityForm'].reset();
+        document.getElementById('activityForm').reset();
         await fetchActivityData();
         showSuccessModal();
     } finally {
