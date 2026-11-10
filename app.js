@@ -1,8 +1,4 @@
-// ==========================================
-// ตั้งค่า URL ของ Google Apps Script Web App ของท่านที่นี่
-// ==========================================
 const API_URL = "https://script.google.com/macros/s/AKfycbwbmnvmRRvGwqW63QQHjqEnx-znrHdO3cQH4gPtY4K7QQNnch2Vq24VPuoY8SwZoJRa/exec";
-
 let calendar;
 let allEvents = [];
 
@@ -11,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchActivityData();
 });
 
-// ฟังก์ชันสลับแท็บเมนู
 function switchTab(tab) {
     if (tab === 'dashboard') {
         document.getElementById('tab-dashboard').classList.remove('hidden');
@@ -19,13 +14,9 @@ function switchTab(tab) {
         document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition';
         document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition';
         document.getElementById('page-title').innerText = 'Dashboard กิจกรรม';
-        
-        // สั่งวาดปฏิทินและอัปเดตขนาดใหม่ทันทีเมื่อกลับมาหน้า Dashboard
         if (calendar) {
             calendar.render();
-            setTimeout(() => {
-                calendar.updateSize();
-            }, 100);
+            setTimeout(() => calendar.updateSize(), 100);
         }
     } else {
         document.getElementById('tab-dashboard').classList.add('hidden');
@@ -36,7 +27,6 @@ function switchTab(tab) {
     }
 }
 
-// ฟังก์ชันตั้งค่าและสร้างปฏิทิน FullCalendar
 function initCalendar() {
     var calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
@@ -52,26 +42,14 @@ function initCalendar() {
         events: [],
         eventClick: function(info) {
             showModal(info.event.extendedProps);
-        },
-        windowResize: function(view) {
-            calendar.updateSize();
         }
     });
     
     calendar.render();
-    
-    setTimeout(() => {
-        calendar.updateSize();
-    }, 200);
 }
 
-// ฟังก์ชันดึงข้อมูลจาก Google Apps Script API
 async function fetchActivityData() {
-    if (!API_URL || API_URL.includes("ใส่_Web_App_URL")) {
-        console.warn("ยังไม่ได้ใส่ Google Apps Script Web App URL ใน app.js");
-        return;
-    }
-    
+    if (!API_URL || API_URL.includes("ใส่_Web_App_URL")) return;
     try {
         let response = await fetch(`${API_URL}?action=getData`);
         let result = await response.json();
@@ -85,7 +63,6 @@ async function fetchActivityData() {
     }
 }
 
-// ฟังก์ชันอัปเดตข้อมูลกิจกรรมลงในปฏิทิน
 function updateCalendarEvents(data) {
     if (!calendar) return;
     let events = data.map(item => {
@@ -109,14 +86,12 @@ function updateCalendarEvents(data) {
     calendar.render();
 }
 
-// ฟังก์ชันคำนวณและแสดงผลชั่วโมงสะสมของผู้รับผิดชอบ
 function calculateWorkload(data) {
     let workloadMap = {};
 
     data.forEach(item => {
         if (!item.startTime || !item.endTime) return;
         
-        // คำนวณชั่วโมงจากเวลา HH:mm อย่างแม่นยำ
         let [startH, startM] = item.startTime.split(':').map(Number);
         let [endH, endM] = item.endTime.split(':').map(Number);
         
@@ -126,7 +101,6 @@ function calculateWorkload(data) {
         let durationHours = (endTotalMins - startTotalMins) / 60;
         if (durationHours < 0) durationHours = 0;
 
-        // แยกรายชื่อผู้รับผิดชอบกรณีมีหลายคนคั่นด้วยเครื่องหมายจุลภาค (,)
         let responsibles = String(item.responsible || '').split(',').map(r => r.trim());
         let count = responsibles.length;
         let hoursPerPerson = count > 0 ? durationHours / count : durationHours;
@@ -163,7 +137,6 @@ function calculateWorkload(data) {
     }
 }
 
-// ฟังก์ชันแสดง Modal รายละเอียดกิจกรรมเมื่อคลิกที่ปฏิทิน
 function showModal(data) {
     document.getElementById('modal-title').innerText = data.activityName;
     document.getElementById('modal-dept').innerText = data.department;
@@ -178,7 +151,6 @@ function closeModal() {
     document.getElementById('eventModal').classList.add('hidden');
 }
 
-// ฟังก์ชันแสดง Modal แจ้งเตือนความสำเร็จเมื่อบันทึกข้อมูลเสร็จ
 function showSuccessModal() {
     let modal = document.getElementById('successModal');
     if (!modal) {
@@ -204,10 +176,9 @@ function showSuccessModal() {
 function closeSuccessModal() {
     const modal = document.getElementById('successModal');
     if (modal) modal.classList.add('hidden');
-    switchTab('dashboard'); // พาผู้ใช้กลับมาหน้า Dashboard อัตโนมัติ
+    switchTab('dashboard');
 }
 
-// ฟังก์ชันส่งข้อมูลฟอร์มไปยัง Google Sheets ผ่าน Apps Script API
 async function submitForm(e) {
     e.preventDefault();
     let btn = document.getElementById('submit-btn');
@@ -232,8 +203,8 @@ async function submitForm(e) {
         let result = await response.json();
         if (result.status === "success") {
             document.getElementById('activityForm').reset();
-            await fetchActivityData(); // ดึงข้อมูลล่าสุดมาแสดงผลทันที
-            showSuccessModal();      // แสดง Modal แจ้งเตือนความสำเร็จสวยงาม
+            await fetchActivityData();
+            showSuccessModal();
         } else {
             alert("เกิดข้อผิดพลาด: " + result.message);
         }
