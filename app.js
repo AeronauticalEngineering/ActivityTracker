@@ -1,0 +1,177 @@
+const API_URL = "https://script.google.com/macros/s/AKfycbwbmnvmRRvGwqW63QQHjqEnx-znrHdO3cQH4gPtY4K7QQNnch2Vq24VPuoY8SwZoJRa/exec";
+let calendar;
+let allEvents = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    initCalendar();
+    fetchActivityData();
+});
+
+function switchTab(tab) {
+    if (tab === 'dashboard') {
+        document.getElementById('tab-dashboard').classList.remove('hidden');
+        document.getElementById('tab-form').classList.add('hidden');
+        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition';
+        document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition';
+        document.getElementById('page-title').innerText = 'Dashboard กิจกรรม';
+        if(calendar) calendar.render();
+    } else {
+        document.getElementById('tab-dashboard').classList.add('hidden');
+        document.getElementById('tab-form').classList.remove('hidden');
+        document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition';
+        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition';
+        document.getElementById('page-title').innerText = 'บันทึกข้อมูลกิจกรรม';
+    }
+}
+
+function initCalendar() {
+    var calendarEl = document.getElementById('calendar');
+    if (!calendarEl) return;
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'th',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek'
+        },
+        events: [],
+        eventClick: function(info) {
+            showModal(info.event.extendedProps);
+        }
+    });
+    calendar.render();
+}
+
+async function fetchActivityData() {
+    if (!API_URL || API_URL.includes("ใส่_Web_App_URL")) return;
+    try {
+        let response = await fetch(`${API_URL}?action=getData`);
+        let result = await response.json();
+        if (result.status === "success") {
+            allEvents = result.data;
+            updateCalendarEvents(allEvents);
+            calculateWorkload(allEvents);
+        }
+    } catch (error) {
+        console.error("Error fetching data:", error);
+    }
+}
+
+function updateCalendarEvents(data) {
+    if (!calendar) return;
+    let events = data.map(item => {
+        return {
+            title: item.activityName,
+            start: `${item.date}T${item.startTime}`,
+            end: `${item.date}T${item.endTime}`,
+            extendedProps: {
+                activityName: item.activityName,
+                department: item.department,
+                date: item.date,
+                time: `${item.startTime} - ${item.endTime} น.`,
+                participants: item.participants,
+                responsible: item.responsible
+            }
+        };
+    });
+    calendar.removeAllEvents();
+    calendar.addEventSource(events);
+}
+
+function calculateWorkload(data) {
+    let workloadMap = {};
+
+    data.forEach(item => {
+        let startTime = new Date(`1970-01-01T${item.startTime}:00`);
+        let endTime = new Date(`1970-01-01T${item.endTime}:00`);
+        let durationHours = (endTime - startTime) / (1000 * 60 * 60);
+        if (durationHours < 0) durationHours = 0;
+
+        let responsibles = String(item.responsible || '').split(',').map(r => r.trim());
+        let count = responsibles.length;
+        let hoursPerPerson = count > 0 ? durationHours / count : durationHours;
+
+        responsibles.forEach(person => {
+            if (person) {
+                workloadMap[person] = (workloadMap[person] || 0) + hoursPerPerson;
+            }
+        });
+    });
+
+    let container = document.getElementById('workload-summary');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (Object.keys(workloadMap).length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm col-span-3">ยังไม่มีข้อมูลภาระงาน</p>';
+        return;
+    }
+
+    for (let [person, hours] of Object.entries(workloadMap)) {
+        container.innerHTML += `
+            <div class="p-4 bg-blue-50 border border-blue-100 rounded-lg flex justify-between items-center">
+                <div>
+                    <h4 class="font-medium text-gray-800">${person}</h4>
+                    <p class="text-xs text-gray-500">ผู้รับผิดชอบกิจกรรม</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-lg font-bold text-primary">${hours.toFixed(1)}</span>
+                    <span class="text-xs text-gray-600 block">ชั่วโมงสะสม</span>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function showModal(data) {
+    document.getElementById('modal-title').innerText = data.activityName;
+    document.getElementById('modal-dept').innerText = data.department;
+    document.getElementById('modal-date').innerText = data.date;
+    document.getElementById('modal-time').innerText = data.time;
+    document.getElementById('modal-participants').innerText = data.participants;
+    document.getElementById('modal-responsible').innerText = data.responsible;
+    document.getElementById('eventModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+}
+
+async function submitForm(e) {
+    e.preventDefault();
+    let btn = document.getElementById('submit-btn');
+    btn.innerText = "กำลังบันทึก...";
+    btn.disabled = true;
+
+    let payload = {
+        activityName: document.getElementById('activityName').value,
+        department: document.getElementById('department').value,
+        date: document.getElementById('date').value,
+        startTime: document.getElementById('startTime').value,
+        endTime: document.getElementById('endTime').value,
+        participants: document.getElementById('participants').value,
+        responsible: document.getElementById('responsible').value
+    };
+
+    try {
+        let response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        let result = await response.json();
+        if (result.status === "success") {
+            alert("บันทึกข้อมูลสำเร็จ!");
+            document.getElementById('activityForm').reset();
+            fetchActivityData();
+            switchTab('dashboard');
+        } else {
+            alert("เกิดข้อผิดพลาด: " + result.message);
+        }
+    } catch (error) {
+        alert("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
+    } finally {
+        btn.innerText = "บันทึกข้อมูล";
+        btn.disabled = false;
+    }
+}
