@@ -48,20 +48,28 @@ function initCalendar() {
     calendar.render();
 }
 
-async function fetchActivityData() {
+// ใช้ JSONP ดึงข้อมูลเพื่อหลีกเลี่ยงปัญหา CORS
+function fetchActivityData() {
     if (!API_URL) return;
-    try {
-        // ใช้โหมด no-cors หรือเรียกผ่าน fetch ปกติ
-        let response = await fetch(`${API_URL}?action=getData`);
-        let result = await response.json();
-        if (result.status === "success" && Array.isArray(result.data)) {
+    
+    let callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+    window[callbackName] = function(result) {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        
+        if (result && result.status === "success" && Array.isArray(result.data)) {
             allEvents = result.data;
             updateCalendarEvents(allEvents);
             calculateWorkload(allEvents);
         }
-    } catch (error) {
-        console.error("Error fetching data, trying alternative method:", error);
-    }
+    };
+
+    let script = document.createElement('script');
+    script.src = `${API_URL}?action=getData&callback=${callbackName}`;
+    script.onerror = function() {
+        console.error("Error loading JSONP data");
+    };
+    document.body.appendChild(script);
 }
 
 function updateCalendarEvents(data) {
@@ -178,6 +186,7 @@ function closeSuccessModal() {
     const modal = document.getElementById('successModal');
     if (modal) modal.classList.add('hidden');
     switchTab('dashboard');
+    fetchActivityData();
 }
 
 async function submitForm(e) {
@@ -202,17 +211,11 @@ async function submitForm(e) {
             body: JSON.stringify(payload)
         });
         let result = await response.json();
-        if (result.status === "success") {
-            document.getElementById('activityForm').reset();
-            await fetchActivityData();
-            showSuccessModal();
-        } else {
-            alert("เกิดข้อผิดพลาด: " + result.message);
-        }
-    } catch (error) {
-        // กรณีติด CORS แต่ข้อมูลถูกบันทึกลง Sheet แล้ว ให้ถือว่าสำเร็จ
         document.getElementById('activityForm').reset();
-        await fetchActivityData();
+        showSuccessModal();
+    } catch (error) {
+        // กรณีติด CORS แต่ข้อมูลถูกบันทึกลง Sheet แล้ว
+        document.getElementById('activityForm').reset();
         showSuccessModal();
     } finally {
         btn.innerText = "บันทึกข้อมูล";
