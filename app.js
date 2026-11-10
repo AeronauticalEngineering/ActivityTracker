@@ -37,7 +37,13 @@ function initCalendar() {
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek'
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        buttonText: {
+            today: 'วันนี้',
+            month: 'เดือน',
+            week: 'สัปดาห์',
+            list: 'กำหนดการ'
         },
         events: [],
         eventClick: function(info) {
@@ -69,14 +75,16 @@ async function fetchActivityData() {
 function updateCalendarEvents(data) {
     if (!calendar) return;
     let events = data.map(item => {
+        // จัดรูปแบบวันที่ให้เป็น YYYY-MM-DD เพื่อให้ปฏิทินแสดงผลชัวร์ 100%
+        let cleanDate = String(item.date).split('T')[0];
         return {
             title: item.activityName,
-            start: `${item.date}T${item.startTime}`,
-            end: `${item.date}T${item.endTime}`,
+            start: `${cleanDate}T${item.startTime || '00:00'}`,
+            end: `${cleanDate}T${item.endTime || '23:59'}`,
             extendedProps: {
                 activityName: item.activityName,
                 department: item.department,
-                date: item.date,
+                date: cleanDate,
                 time: `${item.startTime} - ${item.endTime} น.`,
                 participants: item.participants,
                 responsible: item.responsible,
@@ -96,12 +104,11 @@ function calculateWorkload(data) {
     data.forEach(item => {
         let durationHours = Number(item.workHours) || 0;
         let responsibles = String(item.responsible || '').split(',').map(r => r.trim());
-        let count = responsibles.length;
-        let hoursPerPerson = count > 0 ? durationHours / count : durationHours;
-
+        
+        // กำหนดให้แต่ละคนได้รับชั่วโมงเต็ม (ไม่หารเฉลี่ย) ตามที่ขอครับ
         responsibles.forEach(person => {
             if (person) {
-                workloadMap[person] = (workloadMap[person] || 0) + hoursPerPerson;
+                workloadMap[person] = (workloadMap[person] || 0) + durationHours;
             }
         });
     });
