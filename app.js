@@ -53,7 +53,7 @@ async function fetchActivityData() {
     try {
         let response = await fetch(`${API_URL}?action=getData`);
         let result = await response.json();
-        if (result.status === "success") {
+        if (result.status === "success" && Array.isArray(result.data)) {
             allEvents = result.data;
             updateCalendarEvents(allEvents);
             calculateWorkload(allEvents);
