@@ -16,7 +16,6 @@ function switchTab(tab) {
         document.getElementById('page-title').innerText = 'Dashboard กิจกรรม';
         if(calendar) {
             calendar.render();
-            // สั่งให้ FullCalendar จัดขนาดใหม่ให้พอดีจอหลังสลับแท็บ
             setTimeout(() => calendar.updateSize(), 50);
         }
     } else {
@@ -88,9 +87,16 @@ function calculateWorkload(data) {
     let workloadMap = {};
 
     data.forEach(item => {
-        let startTime = new Date(`1970-01-01T${item.startTime}:00`);
-        let endTime = new Date(`1970-01-01T${item.endTime}:00`);
-        let durationHours = (endTime - startTime) / (1000 * 60 * 60);
+        if (!item.startTime || !item.endTime) return;
+        
+        // คำนวณชั่วโมงจากเวลา HH:mm อย่างแม่นยำ
+        let [startH, startM] = item.startTime.split(':').map(Number);
+        let [endH, endM] = item.endTime.split(':').map(Number);
+        
+        let startTotalMins = (startH || 0) * 60 + (startM || 0);
+        let endTotalMins = (endH || 0) * 60 + (endM || 0);
+        
+        let durationHours = (endTotalMins - startTotalMins) / 60;
         if (durationHours < 0) durationHours = 0;
 
         let responsibles = String(item.responsible || '').split(',').map(r => r.trim());
@@ -143,19 +149,17 @@ function closeModal() {
     document.getElementById('eventModal').classList.add('hidden');
 }
 
-// ฟังก์ชันแสดง Modal แจ้งเตือนความสำเร็จแบบสวยงาม
 function showSuccessModal() {
-    // ตรวจสอบว่ามี Success Modal หรือยัง ถ้ายังให้สร้างขึ้นมาอัตโนมัติ
     let modal = document.getElementById('successModal');
     if (!modal) {
         const modalHTML = `
-            <div id="successModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 animate-fade-in">
-                <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center space-y-4 transform transition-all">
+            <div id="successModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+                <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center space-y-4">
                     <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
                         ✓
                     </div>
                     <h3 class="text-xl font-bold text-gray-800">บันทึกข้อมูลสำเร็จ!</h3>
-                    <p class="text-sm text-gray-500">ระบบได้บันทึกข้อมูลกิจกรรมและอัปเดตปฏิทินเรียบร้อยแล้วครับ</p>
+                    <p class="text-sm text-gray-500">ระบบได้บันทึกข้อมูลและอัปเดตปฏิทินเรียบร้อยแล้วครับ</p>
                     <button onclick="closeSuccessModal()" class="w-full py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-blue-900 transition shadow-md">
                         ตกลง
                     </button>
@@ -170,7 +174,7 @@ function showSuccessModal() {
 function closeSuccessModal() {
     const modal = document.getElementById('successModal');
     if (modal) modal.classList.add('hidden');
-    switchTab('dashboard'); // พาผู้ใช้กลับมาหน้า Dashboard
+    switchTab('dashboard');
 }
 
 async function submitForm(e) {
@@ -186,7 +190,7 @@ async function submitForm(e) {
         startTime: document.getElementById('startTime').value,
         endTime: document.getElementById('endTime').value,
         participants: document.getElementById('participants').value,
-        responsible: document.getElementById('responsible').value
+        responsible: document.getElementById('responsible'].value
     };
 
     try {
@@ -197,8 +201,8 @@ async function submitForm(e) {
         let result = await response.json();
         if (result.status === "success") {
             document.getElementById('activityForm').reset();
-            await fetchActivityData(); // ดึงข้อมูลล่าสุดมาแสดงในปฏิทินทันที
-            showSuccessModal(); // แสดง Modal ความสำเร็จสวยงาม
+            await fetchActivityData();
+            showSuccessModal();
         } else {
             alert("เกิดข้อผิดพลาด: " + result.message);
         }
