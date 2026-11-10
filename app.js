@@ -75,17 +75,19 @@ async function fetchActivityData() {
 function updateCalendarEvents(data) {
     if (!calendar) return;
     let events = data.map(item => {
-        // จัดรูปแบบวันที่ให้เป็น YYYY-MM-DD เพื่อให้ปฏิทินแสดงผลชัวร์ 100%
         let cleanDate = String(item.date).split('T')[0];
+        let sTime = item.startTime ? item.startTime.substring(0, 5) : "00:00";
+        let eTime = item.endTime ? item.endTime.substring(0, 5) : "23:59";
+        
         return {
             title: item.activityName,
-            start: `${cleanDate}T${item.startTime || '00:00'}`,
-            end: `${cleanDate}T${item.endTime || '23:59'}`,
+            start: `${cleanDate}T${sTime}`,
+            end: `${cleanDate}T${eTime}`,
             extendedProps: {
                 activityName: item.activityName,
                 department: item.department,
                 date: cleanDate,
-                time: `${item.startTime} - ${item.endTime} น.`,
+                time: `${sTime} - ${eTime} น.`,
                 participants: item.participants,
                 responsible: item.responsible,
                 workHours: item.workHours
@@ -105,7 +107,6 @@ function calculateWorkload(data) {
         let durationHours = Number(item.workHours) || 0;
         let responsibles = String(item.responsible || '').split(',').map(r => r.trim());
         
-        // กำหนดให้แต่ละคนได้รับชั่วโมงเต็ม (ไม่หารเฉลี่ย) ตามที่ขอครับ
         responsibles.forEach(person => {
             if (person) {
                 workloadMap[person] = (workloadMap[person] || 0) + durationHours;
