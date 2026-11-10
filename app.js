@@ -48,28 +48,22 @@ function initCalendar() {
     calendar.render();
 }
 
-// ใช้ JSONP ดึงข้อมูลเพื่อหลีกเลี่ยงปัญหา CORS
-function fetchActivityData() {
+async function fetchActivityData() {
     if (!API_URL) return;
-    
-    let callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-    window[callbackName] = function(result) {
-        delete window[callbackName];
-        document.body.removeChild(script);
-        
-        if (result && result.status === "success" && Array.isArray(result.data)) {
+    try {
+        let response = await fetch(`${API_URL}?action=getData`, {
+            method: 'GET',
+            redirect: 'follow'
+        });
+        let result = await response.json();
+        if (result.status === "success" && Array.isArray(result.data)) {
             allEvents = result.data;
             updateCalendarEvents(allEvents);
             calculateWorkload(allEvents);
         }
-    };
-
-    let script = document.createElement('script');
-    script.src = `${API_URL}?action=getData&callback=${callbackName}`;
-    script.onerror = function() {
-        console.error("Error loading JSONP data");
-    };
-    document.body.appendChild(script);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+    }
 }
 
 function updateCalendarEvents(data) {
@@ -206,16 +200,16 @@ async function submitForm(e) {
     };
 
     try {
-        let response = await fetch(API_URL, {
+        await fetch(API_URL, {
             method: 'POST',
             body: JSON.stringify(payload)
         });
-        let result = await response.json();
         document.getElementById('activityForm').reset();
+        await fetchActivityData();
         showSuccessModal();
     } catch (error) {
-        // กรณีติด CORS แต่ข้อมูลถูกบันทึกลง Sheet แล้ว
         document.getElementById('activityForm').reset();
+        await fetchActivityData();
         showSuccessModal();
     } finally {
         btn.innerText = "บันทึกข้อมูล";
