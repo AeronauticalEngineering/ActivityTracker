@@ -194,11 +194,16 @@ async function submitForm(e) {
     let startTime = document.getElementById('startTime').value;
     let endTime = document.getElementById('endTime').value;
     
-    let startArr = (startTime || "00:00").split(':');
-    let endArr = (endTime || "00:00").split(':');
-    let startMins = Number(startArr[0]) * 60 + Number(startArr[1]);
-    let endMins = Number(endArr[0]) * 60 + Number(endArr[1]);
-    let calcHours = Math.max(0, (endMins - startMins) / 60);
+    // คำนวณชั่วโมงสะสมในฝั่ง Client
+let startArr = (startTime || "00:00").split(':');
+let endArr = (endTime || "00:00").split(':');
+let startMins = Number(startArr[0]) * 60 + Number(startArr[1]);
+let endMins = Number(endArr[0]) * 60 + Number(endArr[1]);
+
+if (endMins < startMins) {
+    endMins += 24 * 60;
+}
+let calcHours = Math.max(0, (endMins - startMins) / 60);
 
     let payload = {
         activityName: document.getElementById('activityName').value,
