@@ -73,48 +73,41 @@ async function fetchActivityData() {
     }
 }
 
-function updateCalendarEvents(data) {function updateCalendarEvents(data) {
+function updateCalendarEvents(data) {
     if (!calendar) return;
     
     let events = data.map(item => {
-        // รองรับฟิลด์ชื่อกิจกรรมทั้งแบบเก่าและแบบใหม่ (title / activityName)
-        let title = item.title || item.activityName || "ไม่มีชื่อกิจกรรม";
-        
-        // รองรับวันที่ทั้งแบบ startDate หรือ date
-        let rawDate = item.startDate || item.date || '';
-        let cleanDate = String(rawDate).split('T')[0].trim();
-        
+        let cleanDate = String(item.date || '').split('T')[0].trim();
         let sTime = item.startTime ? String(item.startTime).trim().substring(0, 5) : "00:00";
         let eTime = item.endTime ? String(item.endTime).trim().substring(0, 5) : "23:59";
         
         if (!cleanDate) return null;
 
-        let endDate = item.endDate ? String(item.endDate).split('T')[0].trim() : cleanDate;
-        if (eTime < sTime && endDate === cleanDate) {
+        let endDate = cleanDate;
+        if (eTime < sTime) {
             let d = new Date(cleanDate);
             d.setDate(d.getDate() + 1);
             endDate = d.toISOString().split('T')[0];
         }
         
         return {
-            title: title,
-            start: item.allDay ? cleanDate : `${cleanDate}T${sTime}`,
-            end: item.allDay ? endDate : `${endDate}T${eTime}`,
-            backgroundColor: item.color || '#1d4ed8',
-            borderColor: item.color || '#1e40af',
+            title: item.activityName || "ไม่มีชื่อกิจกรรม",
+            start: `${cleanDate}T${sTime}`,
+            end: `${endDate}T${eTime}`,
+            backgroundColor: '#1d4ed8',
+            borderColor: '#1e40af',
             extendedProps: {
-                activityName: title,
-                department: item.department || item.departmentId || '-',
+                activityName: item.activityName,
+                department: item.department,
                 date: cleanDate,
-                time: item.allDay ? 'ตลอดวัน' : `${sTime} - ${eTime} น.`,
-                participants: item.participants || '-',
-                responsible: item.contactName || item.responsible || '-',
-                workHours: item.workHours || 0
+                time: `${sTime} - ${eTime} น.`,
+                participants: item.participants,
+                responsible: item.responsible,
+                workHours: item.workHours
             }
         };
     }).filter(event => event !== null);
     
-    // ล้างอีเวนต์เก่าทั้งหมดแล้วใส่ข้อมูลใหม่เข้าไปวาดทันที
     calendar.getEvents().forEach(event => event.remove());
     events.forEach(event => calendar.addEvent(event));
 }
