@@ -57,7 +57,8 @@ function initCalendar() {
 async function fetchActivityData() {
     if (!API_URL) return;
     try {
-        let response = await fetch(`${API_URL}?action=getData`, {
+        // ป้องกันแคชเก่าด้วย Timestamp ท้าย URL
+        let response = await fetch(`${API_URL}?action=getData&_=${new Date().getTime()}`, {
             method: 'GET',
             redirect: 'follow'
         });
@@ -76,13 +77,10 @@ function updateCalendarEvents(data) {
     if (!calendar) return;
     
     let events = data.map(item => {
-        // ตัดเอาเฉพาะวันที่ (YYYY-MM-DD) ตัดเวลาด้านหลังออก (ป้องกันปัญหาสตริงวันที่ซ้อนกัน)
         let cleanDate = String(item.date).split('T')[0].trim();
-        
         let sTime = item.startTime ? item.startTime.substring(0, 5) : "00:00";
         let eTime = item.endTime ? item.endTime.substring(0, 5) : "23:59";
         
-        // จัดการกรณีข้ามคืน
         let endDate = cleanDate;
         if (eTime < sTime) {
             let d = new Date(cleanDate);
@@ -192,11 +190,7 @@ function closeSuccessModal() {
     const modal = document.getElementById('successModal');
     if (modal) modal.classList.add('hidden');
     switchTab('dashboard');
-    
-    // หน่วงเวลา 2.5 วินาที เพื่อให้ Google Sheets บันทึกข้อมูลลงตารางเสร็จก่อน ค่อยดึงข้อมูลจริงมาอัปเดต
-    setTimeout(() => {
-        fetchActivityData();
-    }, 2500);
+    fetchActivityData();
 }
 
 async function submitForm(e) {
@@ -238,7 +232,7 @@ async function submitForm(e) {
             body: JSON.stringify(payload)
         });
 
-        // Optimistic Update แสดงผลทันทีบนปฏิทินโดยไม่หายไป
+        // Optimistic Update แสดงผลทันที
         let newEventItem = {
             id: "ACT-" + new Date().getTime(),
             activityName: payload.activityName,
