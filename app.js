@@ -78,10 +78,15 @@ function updateCalendarEvents(data) {
     if (!calendar) return;
     
     let events = data.map(item => {
-        let cleanDate = String(item.date).split('T')[0].trim();
-        let sTime = item.startTime ? item.startTime.substring(0, 5) : "00:00";
-        let eTime = item.endTime ? item.endTime.substring(0, 5) : "23:59";
+        // ตัดช่องว่างและดึงเฉพาะวันที่ YYYY-MM-DD
+        let cleanDate = String(item.date || '').split('T')[0].trim();
+        let sTime = item.startTime ? String(item.startTime).trim().substring(0, 5) : "00:00";
+        let eTime = item.endTime ? String(item.endTime).trim().substring(0, 5) : "23:59";
         
+        // ป้องกันกรณีวันที่ว่างเปล่า
+        if (!cleanDate) return null;
+
+        // จัดการกรณีข้ามคืน
         let endDate = cleanDate;
         if (eTime < sTime) {
             let d = new Date(cleanDate);
@@ -90,7 +95,7 @@ function updateCalendarEvents(data) {
         }
         
         return {
-            title: item.activityName,
+            title: item.activityName || "ไม่มีชื่อกิจกรรม",
             start: `${cleanDate}T${sTime}`,
             end: `${endDate}T${eTime}`,
             backgroundColor: '#1d4ed8',
@@ -105,10 +110,11 @@ function updateCalendarEvents(data) {
                 workHours: item.workHours
             }
         };
-    });
+    }).filter(event => event !== null); // กรองค่าที่เป็น null ออก
     
     calendar.removeAllEventSources();
     calendar.addEventSource(events);
+    calendar.refetchEvents(); // สั่งให้ปฏิทินดึงและวาดข้อมูลใหม่ทันที
     calendar.render();
 }
 
