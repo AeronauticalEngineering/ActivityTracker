@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbwbmnvmRRvGwqW63QQHjqEnx-znrHdO3cQH4gPtY4K7QQNnch2Vq24VPuoY8SwZoJRa/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxrvVbhFYpCR0M-gegs6u1hl-sl51T7fcMLV7CdaOp-Gjzydwr_pyYTx261JAX8i4s0/exec";
 let calendar;
 let allEvents = [];
 
