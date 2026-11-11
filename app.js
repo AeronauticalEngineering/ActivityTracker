@@ -192,7 +192,11 @@ function closeSuccessModal() {
     const modal = document.getElementById('successModal');
     if (modal) modal.classList.add('hidden');
     switchTab('dashboard');
-    fetchActivityData();
+    
+    // หน่วงเวลา 2.5 วินาที เพื่อให้ Google Sheets บันทึกข้อมูลลงตารางเสร็จก่อน ค่อยดึงข้อมูลจริงมาอัปเดต
+    setTimeout(() => {
+        fetchActivityData();
+    }, 2500);
 }
 
 async function submitForm(e) {
