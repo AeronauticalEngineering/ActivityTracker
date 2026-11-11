@@ -77,12 +77,14 @@ function updateCalendarEvents(data) {
     if (!calendar) return;
     
     let events = data.map(item => {
+        // ดึงค่าตามชื่อฟิลด์ JSON ที่ส่งมาจาก code.gs
         let cleanDate = String(item.date || '').split('T')[0].trim();
         let sTime = item.startTime ? String(item.startTime).trim().substring(0, 5) : "00:00";
         let eTime = item.endTime ? String(item.endTime).trim().substring(0, 5) : "23:59";
         
         if (!cleanDate) return null;
 
+        // จัดการกรณีข้ามคืน
         let endDate = cleanDate;
         if (eTime < sTime) {
             let d = new Date(cleanDate);
@@ -91,7 +93,7 @@ function updateCalendarEvents(data) {
         }
         
         return {
-            title: item.activityName || "ไม่มีชื่อกิจกรรม",
+            title: item.activityName || "ไม่มีชื่อกิจกรรม", // ดึงชื่อกิจกรรมจาก Column B มาแสดงบนปฏิทิน
             start: `${cleanDate}T${sTime}`,
             end: `${endDate}T${eTime}`,
             backgroundColor: '#1d4ed8',
