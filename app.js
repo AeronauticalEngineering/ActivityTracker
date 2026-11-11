@@ -76,22 +76,14 @@ function updateCalendarEvents(data) {
     if (!calendar) return;
     
     let events = data.map(item => {
-        let cleanDate = String(item.date).split('T')[0];
+        let cleanDate = String(item.date).trim();
         let sTime = item.startTime ? item.startTime.substring(0, 5) : "00:00";
         let eTime = item.endTime ? item.endTime.substring(0, 5) : "23:59";
-        
-        // จัดการกรณีข้ามคืน
-        let endDate = cleanDate;
-        if (eTime < sTime) {
-            let d = new Date(cleanDate);
-            d.setDate(d.getDate() + 1);
-            endDate = d.toISOString().split('T')[0];
-        }
         
         return {
             title: item.activityName,
             start: `${cleanDate}T${sTime}`,
-            end: `${endDate}T${eTime}`,
+            end: `${cleanDate}T${eTime}`,
             backgroundColor: '#1d4ed8',
             borderColor: '#1e40af',
             extendedProps: {
