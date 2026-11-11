@@ -108,7 +108,7 @@ function updateCalendarEvents(data) {
         };
     }).filter(event => event !== null);
     
-    // เคลียร์อีเวนต์เดิมทั้งหมดออกก่อน แล้วใส่ข้อมูลชุดใหม่เข้าไปวาดบนปฏิทินทันที
+    // ล้างอีเวนต์เก่าทั้งหมดแล้วใส่ข้อมูลใหม่เข้าไปวาดทันที
     calendar.getEvents().forEach(event => event.remove());
     events.forEach(event => calendar.addEvent(event));
 }
