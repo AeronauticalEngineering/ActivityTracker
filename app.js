@@ -224,6 +224,7 @@ async function submitForm(e) {
     };
 
     try {
+        // ส่งข้อมูลไปบันทึก
         await fetch(API_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -233,35 +234,17 @@ async function submitForm(e) {
             body: JSON.stringify(payload)
         });
 
-        // Optimistic Update แสดงผลทันที
-        let newEventItem = {
-            id: "ACT-" + new Date().getTime(),
-            activityName: payload.activityName,
-            department: payload.department,
-            date: payload.date,
-            startTime: payload.startTime,
-            endTime: payload.endTime,
-            participants: payload.participants,
-            responsible: payload.responsible,
-            workHours: calcHours
-        };
-
-        allEvents.push(newEventItem);
-        updateCalendarEvents(allEvents);
-        calculateWorkload(allEvents);
-
         document.getElementById('activityForm').reset();
         showSuccessModal();
 
-        // หน่วงเวลาดึงข้อมูลจริงซ้ำอีกครั้งเพื่อความชัวร์
-        setTimeout(() => {
-            fetchActivityData();
-        }, 1500);
+        // หน่วงเวลา 2 วินาทีให้ Google Sheets บันทึกเสร็จ แล้วดึงข้อมูลจริงจากฐานข้อมูลมาแสดงทันที
+        setTimeout(async () => {
+            await fetchActivityData();
+        }, 2000);
 
     } catch (error) {
         console.error("Error submitting form:", error);
-        document.getElementById('activityForm').reset();
-        showSuccessModal();
+        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
         btn.innerText = "บันทึกข้อมูล";
         btn.disabled = false;
