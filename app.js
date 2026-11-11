@@ -219,7 +219,7 @@ async function submitForm(e) {
         startTime: startTime,
         endTime: endTime,
         participants: document.getElementById('participants').value,
-        responsible: document.getElementById('responsible'].value
+        responsible: document.getElementById('responsible').value // เปลี่ยนเป็น .value และใช้วงเล็บให้ถูกต้อง
     };
 
     try {
