@@ -1,252 +1,116 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbwbmnvmRRvGwqW63QQHjqEnx-znrHdO3cQH4gPtY4K7QQNnch2Vq24VPuoY8SwZoJRa/exec";
-let calendar;
-let allEvents = [];
+var SPREADSHEET_ID = "112Zk3_nfQ-_dnoJx7I-MLNkGcKuVmUJMfGDvsQJHlhc";
 
-document.addEventListener('DOMContentLoaded', function() {
-    initCalendar();
-    fetchActivityData();
-});
+function getSheet() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  return ss.getSheetByName("Activities");
+}
 
-function switchTab(tab) {
-    if (tab === 'dashboard') {
-        document.getElementById('tab-dashboard').classList.remove('hidden');
-        document.getElementById('tab-form').classList.add('hidden');
-        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition flex items-center space-x-3';
-        document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition flex items-center space-x-3';
-        document.getElementById('page-title').innerText = 'Dashboard กิจกรรม';
-        if (calendar) {
-            calendar.updateSize();
-            calendar.render();
+function doGet(e) {
+  var action = e ? e.parameter.action : "";
+  
+  if (action === "getData") {
+    var sheet = getSheet();
+    var rows = sheet.getDataRange().getValues();
+    var data = [];
+    
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+      if (!row[0]) continue;
+      
+      var id = String(row[0] || "");
+      var activityName = String(row[1] || "");
+      var department = String(row[2] || "");
+      
+      var formattedDate = "";
+      if (row[3]) {
+        if (row[3] instanceof Date) {
+          var d = row[3];
+          var year = d.getFullYear();
+          var month = ('0' + (d.getMonth() + 1)).slice(-2);
+          var day = ('0' + d.getDate()).slice(-2);
+          formattedDate = year + '-' + month + '-' + day;
+        } else {
+          formattedDate = String(row[3]).trim().split("T")[0];
         }
-    } else {
-        document.getElementById('tab-dashboard').classList.add('hidden');
-        document.getElementById('tab-form').classList.remove('hidden');
-        document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition flex items-center space-x-3';
-        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition flex items-center space-x-3';
-        document.getElementById('page-title').innerText = 'บันทึกข้อมูลกิจกรรม';
-    }
-}
+      }
 
-function initCalendar() {
-    var calendarEl = document.getElementById('calendar');
-    if (!calendarEl) return;
-    
-    calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'th',
-        displayEventTime: false, // ซ่อนตัวเลขเวลาหน้านำชื่อกิจกรรม
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,listWeek'
-        },
-        buttonText: {
-            today: 'วันนี้',
-            month: 'เดือน',
-            week: 'สัปดาห์',
-            list: 'กำหนดการ'
-        },
-        events: [],
-        eventClick: function(info) {
-            showModal(info.event.extendedProps);
+      var startTimeStr = "00:00";
+      if (row[4]) {
+        if (row[4] instanceof Date) {
+          startTimeStr = Utilities.formatDate(row[4], "GMT", "HH:mm");
+        } else {
+          startTimeStr = String(row[4]).trim().substring(0, 5);
         }
-    });
-    
-    calendar.render();
-}
+      }
 
-async function fetchActivityData() {
-    if (!API_URL) return;
-    try {
-        let response = await fetch(`${API_URL}?action=getData&_=${new Date().getTime()}`, {
-            method: 'GET',
-            redirect: 'follow'
-        });
-        let result = await response.json();
-        if (result.status === "success" && Array.isArray(result.data)) {
-            allEvents = result.data;
-            updateCalendarEvents(allEvents);
-            calculateWorkload(allEvents);
+      var endTimeStr = "23:59";
+      if (row[5]) {
+        if (row[5] instanceof Date) {
+          endTimeStr = Utilities.formatDate(row[5], "GMT", "HH:mm");
+        } else {
+          endTimeStr = String(row[5]).trim().substring(0, 5);
         }
-    } catch (error) {
-        console.error("Error fetching data:", error);
-    }
-}
+      }
 
-function updateCalendarEvents(data) {
-    if (!calendar) return;
+      var participants = String(row[6] || "0");
+      var responsible = String(row[7] || "");
+      var workHours = Number(row[8]) || 0;
+
+      data.push({
+        id: id,
+        activityName: activityName,
+        department: department,
+        date: formattedDate,
+        startTime: startTimeStr,
+        endTime: endTimeStr,
+        participants: participants,
+        responsible: responsible,
+        workHours: workHours
+      });
+    }
     
-    let events = data.map(item => {
-        let cleanDate = String(item.date || '').split('T')[0].trim();
-        let sTime = item.startTime ? String(item.startTime).trim().substring(0, 5) : "00:00";
-        let eTime = item.endTime ? String(item.endTime).trim().substring(0, 5) : "23:59";
-        
-        if (!cleanDate) return null;
+    var output = ContentService.createTextOutput(JSON.stringify({ status: "success", count: data.length, data: data }));
+    output.setMimeType(ContentService.MimeType.JSON);
+    return output;
+  }
+}
 
-        let endDate = cleanDate;
-        if (eTime < sTime) {
-            let d = new Date(cleanDate);
-            d.setDate(d.getDate() + 1);
-            endDate = d.toISOString().split('T')[0];
-        }
-        
-        return {
-            title: item.activityName || "ไม่มีชื่อกิจกรรม",
-            start: `${cleanDate}T${sTime}`,
-            end: `${endDate}T${eTime}`,
-            backgroundColor: '#1d4ed8',
-            borderColor: '#1e40af',
-            extendedProps: {
-                activityName: item.activityName,
-                department: item.department,
-                date: cleanDate,
-                time: `${sTime} - ${eTime} น.`,
-                participants: item.participants,
-                responsible: item.responsible,
-                workHours: item.workHours
-            }
-        };
-    }).filter(event => event !== null);
+function doPost(e) {
+  try {
+    var sheet = getSheet();
+    var data = JSON.parse(e.postData.contents);
+    var id = "ACT-" + new Date().getTime();
     
-    calendar.removeAllEventSources();
-    calendar.addEventSource(events);
-    calendar.refetchEvents();
-    calendar.render();
-}
-
-function calculateWorkload(data) {
-    let workloadMap = {};
-
-    data.forEach(item => {
-        let durationHours = Number(item.workHours) || 0;
-        let responsibles = String(item.responsible || '').split(',').map(r => r.trim());
-        
-        responsibles.forEach(person => {
-            if (person) {
-                workloadMap[person] = (workloadMap[person] || 0) + durationHours;
-            }
-        });
-    });
-
-    let container = document.getElementById('workload-summary');
-    if (!container) return;
-    container.innerHTML = '';
-
-    if (Object.keys(workloadMap).length === 0) {
-        container.innerHTML = '<p class="text-gray-500 text-sm col-span-3">ยังไม่มีข้อมูลภาระงาน</p>';
-        return;
-    }
-
-    for (let [person, hours] of Object.entries(workloadMap)) {
-        container.innerHTML += `
-            <div class="p-4 bg-blue-50 border border-blue-100 rounded-lg flex justify-between items-center shadow-sm">
-                <div>
-                    <h4 class="font-medium text-gray-800">${person}</h4>
-                    <p class="text-xs text-gray-500">ผู้รับผิดชอบกิจกรรม</p>
-                </div>
-                <div class="text-right">
-                    <span class="text-lg font-bold text-primary">${hours.toFixed(1)}</span>
-                    <span class="text-xs text-gray-600 block">ชั่วโมงสะสม</span>
-                </div>
-            </div>
-        `;
-    }
-}
-
-function showModal(data) {
-    document.getElementById('modal-title').innerText = data.activityName;
-    document.getElementById('modal-dept').innerText = data.department;
-    document.getElementById('modal-date').innerText = data.date;
-    document.getElementById('modal-time').innerText = data.time;
-    document.getElementById('modal-participants').innerText = data.participants;
-    document.getElementById('modal-responsible').innerText = data.responsible;
-    document.getElementById('eventModal').classList.remove('hidden');
-}
-
-function closeModal() {
-    document.getElementById('eventModal').classList.add('hidden');
-}
-
-function showSuccessModal() {
-    let modal = document.getElementById('successModal');
-    if (!modal) {
-        const modalHTML = `
-            <div id="successModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-                <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center space-y-4">
-                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
-                        ✓
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800">บันทึกข้อมูลสำเร็จ!</h3>
-                    <p class="text-sm text-gray-500">ระบบได้บันทึกข้อมูลและอัปเดตปฏิทินเรียบร้อยแล้วครับ</p>
-                    <button onclick="closeSuccessModal()" class="w-full py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-blue-900 transition shadow-md">
-                        ตกลง
-                    </button>
-                </div>
-            </div>`;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        modal = document.getElementById('successModal');
-    }
-    modal.classList.remove('hidden');
-}
-
-function closeSuccessModal() {
-    const modal = document.getElementById('successModal');
-    if (modal) modal.classList.add('hidden');
-    switchTab('dashboard');
-    fetchActivityData();
-}
-
-async function submitForm(e) {
-    e.preventDefault();
-    let btn = document.getElementById('submit-btn');
-    btn.innerText = "กำลังบันทึก...";
-    btn.disabled = true;
-
-    let startTime = document.getElementById('startTime').value;
-    let endTime = document.getElementById('endTime').value;
-    
-    let startArr = (startTime || "00:00").split(':');
-    let endArr = (endTime || "00:00").split(':');
-    let startMins = Number(startArr[0]) * 60 + Number(startArr[1]);
-    let endMins = Number(endArr[0]) * 60 + Number(endArr[1]);
+    var startArr = (data.startTime || "00:00").split(':');
+    var endArr = (data.endTime || "00:00").split(':');
+    var startMins = Number(startArr[0]) * 60 + Number(startArr[1]);
+    var endMins = Number(endArr[0]) * 60 + Number(endArr[1]);
     
     if (endMins < startMins) {
-        endMins += 24 * 60;
+      endMins += 24 * 60;
     }
-    let calcHours = Math.max(0, (endMins - startMins) / 60);
+    
+    var calcHours = (endMins - startMins) / 60;
+    if (calcHours < 0) calcHours = 0;
 
-    let payload = {
-        activityName: document.getElementById('activityName').value,
-        department: document.getElementById('department').value,
-        date: document.getElementById('date').value,
-        startTime: startTime,
-        endTime: endTime,
-        participants: document.getElementById('participants').value,
-        responsible: document.getElementById('responsible').value
-    };
-
-    try {
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'text/plain'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        document.getElementById('activityForm').reset();
-        showSuccessModal();
-
-        setTimeout(async () => {
-            await fetchActivityData();
-        }, 2000);
-
-    } catch (error) {
-        console.error("Error submitting form:", error);
-        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-    } finally {
-        btn.innerText = "บันทึกข้อมูล";
-        btn.disabled = false;
-    }
+    sheet.appendRow([
+      id,
+      data.activityName,
+      data.department,
+      data.date,
+      data.startTime,
+      data.endTime,
+      data.participants,
+      data.responsible,
+      calcHours
+    ]);
+    
+    var output = ContentService.createTextOutput(JSON.stringify({ status: "success", id: id }));
+    output.setMimeType(ContentService.MimeType.JSON);
+    return output;
+  } catch (error) {
+    var output = ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.toString() }));
+    output.setMimeType(ContentService.MimeType.JSON);
+    return output;
+  }
 }
