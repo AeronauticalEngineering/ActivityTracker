@@ -80,14 +80,14 @@ function updateCalendarEvents(data) {
         let sTime = item.startTime ? item.startTime.substring(0, 5) : "00:00";
         let eTime = item.endTime ? item.endTime.substring(0, 5) : "23:59";
         
-        // ตรวจสอบกรณีข้ามคืน (ถ้าเวลาสิ้นสุดน้อยกว่าเวลาเริ่ม ให้บวกวันที่สิ้นสุดเพิ่มไป 1 วัน)
+        // จัดการกรณีข้ามคืน
         let endDate = cleanDate;
         if (eTime < sTime) {
             let d = new Date(cleanDate);
             d.setDate(d.getDate() + 1);
             endDate = d.toISOString().split('T')[0];
         }
-
+        
         return {
             title: item.activityName,
             start: `${cleanDate}T${sTime}`,
@@ -106,7 +106,6 @@ function updateCalendarEvents(data) {
         };
     });
     
-    // ล้าง Event เก่าทั้งหมดแล้วใส่ชุดใหม่เข้าไปทีเดียว
     calendar.removeAllEventSources();
     calendar.addEventSource(events);
     calendar.render();
@@ -203,16 +202,15 @@ async function submitForm(e) {
     let startTime = document.getElementById('startTime').value;
     let endTime = document.getElementById('endTime').value;
     
-    // คำนวณชั่วโมงสะสมในฝั่ง Client
-let startArr = (startTime || "00:00").split(':');
-let endArr = (endTime || "00:00").split(':');
-let startMins = Number(startArr[0]) * 60 + Number(startArr[1]);
-let endMins = Number(endArr[0]) * 60 + Number(endArr[1]);
-
-if (endMins < startMins) {
-    endMins += 24 * 60;
-}
-let calcHours = Math.max(0, (endMins - startMins) / 60);
+    let startArr = (startTime || "00:00").split(':');
+    let endArr = (endTime || "00:00").split(':');
+    let startMins = Number(startArr[0]) * 60 + Number(startArr[1]);
+    let endMins = Number(endArr[0]) * 60 + Number(endArr[1]);
+    
+    if (endMins < startMins) {
+        endMins += 24 * 60;
+    }
+    let calcHours = Math.max(0, (endMins - startMins) / 60);
 
     let payload = {
         activityName: document.getElementById('activityName').value,
@@ -221,7 +219,7 @@ let calcHours = Math.max(0, (endMins - startMins) / 60);
         startTime: startTime,
         endTime: endTime,
         participants: document.getElementById('participants').value,
-        responsible: document.getElementById('responsible').value
+        responsible: document.getElementById('responsible'].value
     };
 
     try {
@@ -234,7 +232,7 @@ let calcHours = Math.max(0, (endMins - startMins) / 60);
             body: JSON.stringify(payload)
         });
 
-        // แสดงผลบนปฏิทินทันที (Optimistic Update)
+        // Optimistic Update แสดงผลทันที
         let newEventItem = {
             id: "ACT-" + new Date().getTime(),
             activityName: payload.activityName,
@@ -254,7 +252,6 @@ let calcHours = Math.max(0, (endMins - startMins) / 60);
         document.getElementById('activityForm').reset();
         showSuccessModal();
 
-        // หน่วงเวลา 2 วินาที แล้วดึงข้อมูลจริงซ้ำอีกครั้ง
         setTimeout(async () => {
             await fetchActivityData();
         }, 2000);
