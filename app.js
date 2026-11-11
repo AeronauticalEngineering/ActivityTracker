@@ -5,6 +5,7 @@ let allEvents = [];
 document.addEventListener('DOMContentLoaded', function() {
     initCalendar();
     fetchActivityData();
+    loadUsersToDropdown(); // โหลดรายชื่อผู้รับผิดชอบใส่ Dropdown
 });
 
 function switchTab(tab) {
@@ -23,7 +24,29 @@ function switchTab(tab) {
         document.getElementById('tab-form').classList.remove('hidden');
         document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition flex items-center space-x-3';
         document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition flex items-center space-x-3';
-        document.getElementById('page-title').innerText = 'บันทึกข้อมูลกิจกรรม';
+        document.getElementById('page-title').innerText = 'บันทึกผู้รับผิดชอบ'; // เปลี่ยนหัวข้อหน้า
+    }
+}
+
+async function loadUsersToDropdown() {
+    if (!API_URL) return;
+    try {
+        let response = await fetch(`${API_URL}?action=getUsers&_=${new Date().getTime()}`);
+        let result = await response.json();
+        if (result.status === "success" && Array.isArray(result.data)) {
+            let select = document.getElementById('responsible');
+            if (!select) return;
+            // คง option แรกไว้แล้วเติมรายชื่อจากฐานข้อมูล
+            select.innerHTML = '<option value="">-- เลือกผู้รับผิดชอบ --</option>';
+            result.data.forEach(name => {
+                let opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+        }
+    } catch (error) {
+        console.error("Error loading users:", error);
     }
 }
 
