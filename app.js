@@ -34,6 +34,7 @@ function initCalendar() {
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'th',
+        displayEventTime: false, // ซ่อนตัวเลขเวลา 2 ตัวที่ไม่ต้องการให้นำหน้าชื่อกิจกรรม
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -251,6 +252,11 @@ async function submitForm(e) {
 
         document.getElementById('activityForm').reset();
         showSuccessModal();
+
+        // หน่วงเวลาดึงข้อมูลจริงซ้ำอีกครั้งเพื่อความชัวร์
+        setTimeout(() => {
+            fetchActivityData();
+        }, 1500);
 
     } catch (error) {
         console.error("Error submitting form:", error);
