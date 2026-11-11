@@ -34,7 +34,7 @@ function initCalendar() {
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'th',
-        displayEventTime: false, // ซ่อนตัวเลขเวลา 2 ตัวที่ไม่ต้องการให้นำหน้าชื่อกิจกรรม
+        displayEventTime: false, // ซ่อนตัวเลขเวลา 2 ตัวหน้านำชื่อกิจกรรม
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -58,7 +58,6 @@ function initCalendar() {
 async function fetchActivityData() {
     if (!API_URL) return;
     try {
-        // ป้องกันแคชเก่าด้วย Timestamp ท้าย URL
         let response = await fetch(`${API_URL}?action=getData&_=${new Date().getTime()}`, {
             method: 'GET',
             redirect: 'follow'
@@ -78,15 +77,12 @@ function updateCalendarEvents(data) {
     if (!calendar) return;
     
     let events = data.map(item => {
-        // ตัดช่องว่างและดึงเฉพาะวันที่ YYYY-MM-DD
         let cleanDate = String(item.date || '').split('T')[0].trim();
         let sTime = item.startTime ? String(item.startTime).trim().substring(0, 5) : "00:00";
         let eTime = item.endTime ? String(item.endTime).trim().substring(0, 5) : "23:59";
         
-        // ป้องกันกรณีวันที่ว่างเปล่า
         if (!cleanDate) return null;
 
-        // จัดการกรณีข้ามคืน
         let endDate = cleanDate;
         if (eTime < sTime) {
             let d = new Date(cleanDate);
@@ -110,11 +106,11 @@ function updateCalendarEvents(data) {
                 workHours: item.workHours
             }
         };
-    }).filter(event => event !== null); // กรองค่าที่เป็น null ออก
+    }).filter(event => event !== null);
     
     calendar.removeAllEventSources();
     calendar.addEventSource(events);
-    calendar.refetchEvents(); // สั่งให้ปฏิทินดึงและวาดข้อมูลใหม่ทันที
+    calendar.refetchEvents();
     calendar.render();
 }
 
@@ -230,7 +226,6 @@ async function submitForm(e) {
     };
 
     try {
-        // ส่งข้อมูลไปบันทึก
         await fetch(API_URL, {
             method: 'POST',
             mode: 'no-cors',
@@ -243,7 +238,6 @@ async function submitForm(e) {
         document.getElementById('activityForm').reset();
         showSuccessModal();
 
-        // หน่วงเวลา 2 วินาทีให้ Google Sheets บันทึกเสร็จ แล้วดึงข้อมูลจริงจากฐานข้อมูลมาแสดงทันที
         setTimeout(async () => {
             await fetchActivityData();
         }, 2000);
