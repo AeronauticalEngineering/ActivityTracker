@@ -76,7 +76,9 @@ function updateCalendarEvents(data) {
     if (!calendar) return;
     
     let events = data.map(item => {
-        let cleanDate = String(item.date).trim();
+        // ตัดเอาเฉพาะวันที่ (YYYY-MM-DD) ตัดเวลาด้านหลังออก (ป้องกันปัญหาสตริงวันที่ซ้อนกัน)
+        let cleanDate = String(item.date).split('T')[0].trim();
+        
         let sTime = item.startTime ? item.startTime.substring(0, 5) : "00:00";
         let eTime = item.endTime ? item.endTime.substring(0, 5) : "23:59";
         
