@@ -108,10 +108,9 @@ function updateCalendarEvents(data) {
         };
     }).filter(event => event !== null);
     
-    calendar.removeAllEventSources();
-    calendar.addEventSource(events);
-    calendar.refetchEvents();
-    calendar.render();
+    // เคลียร์อีเวนต์เดิมทั้งหมดออกก่อน แล้วใส่ข้อมูลชุดใหม่เข้าไปวาดบนปฏิทินทันที
+    calendar.getEvents().forEach(event => event.remove());
+    events.forEach(event => calendar.addEvent(event));
 }
 
 function calculateWorkload(data) {
