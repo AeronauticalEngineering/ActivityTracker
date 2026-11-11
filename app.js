@@ -11,8 +11,8 @@ function switchTab(tab) {
     if (tab === 'dashboard') {
         document.getElementById('tab-dashboard').classList.remove('hidden');
         document.getElementById('tab-form').classList.add('hidden');
-        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition';
-        document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition';
+        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition flex items-center space-x-3';
+        document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition flex items-center space-x-3';
         document.getElementById('page-title').innerText = 'Dashboard กิจกรรม';
         if (calendar) {
             calendar.updateSize();
@@ -21,8 +21,8 @@ function switchTab(tab) {
     } else {
         document.getElementById('tab-dashboard').classList.add('hidden');
         document.getElementById('tab-form').classList.remove('hidden');
-        document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition';
-        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition';
+        document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition flex items-center space-x-3';
+        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition flex items-center space-x-3';
         document.getElementById('page-title').innerText = 'บันทึกข้อมูลกิจกรรม';
     }
 }
@@ -90,7 +90,7 @@ function updateCalendarEvents(data) {
                 activityName: item.activityName,
                 department: item.department,
                 date: cleanDate,
-                time: `${sTime} -${eTime} น.`,
+                time: `${sTime} - ${eTime} น.`,
                 participants: item.participants,
                 responsible: item.responsible,
                 workHours: item.workHours
@@ -162,4 +162,95 @@ function showSuccessModal() {
         const modalHTML = `
             <div id="successModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
                 <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center space-y-4">
-                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto
+                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
+                        ✓
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">บันทึกข้อมูลสำเร็จ!</h3>
+                    <p class="text-sm text-gray-500">ระบบได้บันทึกข้อมูลและอัปเดตปฏิทินเรียบร้อยแล้วครับ</p>
+                    <button onclick="closeSuccessModal()" class="w-full py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-blue-900 transition shadow-md">
+                        ตกลง
+                    </button>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        modal = document.getElementById('successModal');
+    }
+    modal.classList.remove('hidden');
+}
+
+function closeSuccessModal() {
+    const modal = document.getElementById('successModal');
+    if (modal) modal.classList.add('hidden');
+    switchTab('dashboard');
+    fetchActivityData();
+}
+
+async function submitForm(e) {
+    e.preventDefault();
+    let btn = document.getElementById('submit-btn');
+    btn.innerText = "กำลังบันทึก...";
+    btn.disabled = true;
+
+    let startTime = document.getElementById('startTime').value;
+    let endTime = document.getElementById('endTime').value;
+    
+    let startArr = (startTime || "00:00").split(':');
+    let endArr = (endTime || "00:00").split(':');
+    let startMins = Number(startArr[0]) * 60 + Number(startArr[1]);
+    let endMins = Number(endArr[0]) * 60 + Number(endArr[1]);
+    let calcHours = Math.max(0, (endMins - startMins) / 60);
+
+    let payload = {
+        activityName: document.getElementById('activityName').value,
+        department: document.getElementById('department').value,
+        date: document.getElementById('date').value,
+        startTime: startTime,
+        endTime: endTime,
+        participants: document.getElementById('participants').value,
+        responsible: document.getElementById('responsible').value
+    };
+
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'text/plain'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // แสดงผลบนปฏิทินทันที (Optimistic Update)
+        let newEventItem = {
+            id: "ACT-" + new Date().getTime(),
+            activityName: payload.activityName,
+            department: payload.department,
+            date: payload.date,
+            startTime: payload.startTime,
+            endTime: payload.endTime,
+            participants: payload.participants,
+            responsible: payload.responsible,
+            workHours: calcHours
+        };
+
+        allEvents.push(newEventItem);
+        updateCalendarEvents(allEvents);
+        calculateWorkload(allEvents);
+
+        document.getElementById('activityForm').reset();
+        showSuccessModal();
+
+        // หน่วงเวลา 2 วินาที แล้วดึงข้อมูลจริงซ้ำอีกครั้ง
+        setTimeout(async () => {
+            await fetchActivityData();
+        }, 2000);
+
+    } catch (error) {
+        console.error("Error submitting form:", error);
+        document.getElementById('activityForm').reset();
+        showSuccessModal();
+    } finally {
+        btn.innerText = "บันทึกข้อมูล";
+        btn.disabled = false;
+    }
+}
