@@ -3,125 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบันทึกผู้เข้าร่วมกิจกรรม</title>
-    <!-- Tailwind CSS -->
+    <title>Activity & Workload Tracker</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#1e3a8a',
-                        secondary: '#f97316'
+                        primary: '#1d4ed8',
+                        secondary: '#3b82f6'
                     }
                 }
             }
         }
     </script>
-    <!-- FullCalendar สำหรับแสดงผลปฏิทินรูปแบบเดือน -->
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Prompt', sans-serif; } </style>
+    <!-- FullCalendar CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css' rel='stylesheet' />
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-100 min-h-screen flex flex-col md:flex-row">
 
-    <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar Navigation -->
-        <div class="w-64 bg-primary text-white flex flex-col">
-            <div class="p-5 text-xl font-bold border-b border-blue-900">Activity Tracker</div>
-            <nav class="flex-1 p-4 space-y-2">
-                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition">📊 Dashboard & ปฏิทิน</button>
-                <button onclick="switchTab('form')" id="btn-form" class="w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition">📝 บันทึกกิจกรรม</button>
-            </nav>
+    <!-- Mobile Header -->
+    <header class="bg-primary text-white p-4 flex justify-between items-center md:hidden shadow-md">
+        <h1 class="text-lg font-bold">Activity Tracker</h1>
+        <button onclick="toggleMobileMenu()" class="p-2 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </header>
+
+    <!-- Sidebar / Navigation -->
+    <aside id="sidebar" class="bg-blue-900 text-white w-64 md:block hidden md:sticky md:top-0 h-screen flex-shrink-0 p-6 space-y-6 z-40 transition-all">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-white text-primary rounded-xl flex items-center justify-center font-bold text-xl">A</div>
+            <div>
+                <h2 class="font-bold text-base leading-tight">Activity Tracker</h2>
+                <span class="text-xs text-blue-300">ระบบติดตามภาระงาน</span>
+            </div>
         </div>
+        <nav class="space-y-2">
+            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition flex items-center space-x-3">
+                <span>📊 Dashboard & ปฏิทิน</span>
+            </button>
+            <button onclick="switchTab('form')" id="btn-form" class="w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition flex items-center space-x-3">
+                <span>📝 บันทึกกิจกรรม</span>
+            </button>
+        </nav>
+    </aside>
 
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-y-auto">
-            <header class="bg-white shadow-sm p-4 flex justify-between items-center">
-                <h1 id="page-title" class="text-xl font-semibold text-gray-700">Dashboard กิจกรรม</h1>
-                <span class="text-sm text-gray-500">ระบบภายในองค์กร</span>
-            </header>
+    <!-- Main Content Area -->
+    <main class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
+        <header class="flex justify-between items-center mb-6">
+            <h3 id="page-title" class="text-xl md:text-2xl font-bold text-gray-800">Dashboard กิจกรรม</h3>
+            <span class="text-xs md:text-sm text-gray-500 bg-white px-3 py-1.5 rounded-full shadow-sm">ระบบภายในองค์กร</span>
+        </header>
 
-            <main class="p-6">
-                <!-- Tab: Dashboard -->
-                <div id="tab-dashboard" class="space-y-6">
-                    <!-- สรุปภาระงาน (ชั่วโมงสะสม) -->
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <h2 class="text-lg font-medium mb-4 text-gray-700">🏆 สรุปภาระงาน (ชั่วโมงสะสมของผู้รับผิดชอบ)</h2>
-                        <div id="workload-summary" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <!-- ข้อมูลจะถูกเติมด้วย JavaScript -->
-                        </div>
+        <!-- Tab Dashboard -->
+        <section id="tab-dashboard" class="space-y-6">
+            <!-- Workload Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="workload-summary">
+                <p class="text-gray-500 text-sm col-span-full">กำลังโหลดข้อมูลภาระงาน...</p>
+            </div>
+
+            <!-- Calendar Container -->
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-200">
+                <div id="calendar" class="w-full"></div>
+            </div>
+        </section>
+
+        <!-- Tab Form (Add Activity) -->
+        <section id="tab-form" class="hidden space-y-6 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200 max-w-2xl mx-auto">
+            <h4 class="text-lg font-bold text-gray-800 border-b pb-3">ฟอร์มบันทึกข้อมูลกิจกรรมใหม่</h4>
+            <form id="activityForm" onsubmit="submitForm(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อกิจกรรม</label>
+                    <input type="text" id="activityName" required class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">หน่วยงาน / แผนก</label>
+                    <input type="text" id="department" required class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">วันที่จัดกิจกรรม</label>
+                    <input type="date" id="date" required class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">เวลาเริ่ม</label>
+                        <input type="time" id="startTime" required class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
                     </div>
-
-                    <!-- ปฏิทินรูปแบบเดือน -->
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <div id="calendar"></div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">เวลาสิ้นสุด</label>
+                        <input type="time" id="endTime" required class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
                     </div>
                 </div>
-
-                <!-- Tab: บันทึกกิจกรรม -->
-                <div id="tab-form" class="hidden max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-medium mb-4 text-gray-700">แบบฟอร์มบันทึกข้อมูลกิจกรรม</h2>
-                    <form id="activityForm" onsubmit="submitForm(event)" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium">ชื่อกิจกรรม</label>
-                            <input type="text" id="activityName" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium">หน่วยงาน</label>
-                                <input type="text" id="department" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium">วันที่จัดกิจกรรม</label>
-                                <input type="date" id="date" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium">เวลาเริ่ม</label>
-                                <input type="time" id="startTime" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium">เวลาสิ้นสุด</label>
-                                <input type="time" id="endTime" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium">จำนวนผู้เข้าร่วม (คน)</label>
-                                <input type="number" id="participants" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium">ชื่อผู้รับผิดชอบ</label>
-                                <input type="text" id="responsible" placeholder="ระบุชื่อ (คั่นด้วยเครื่องหมายจุลภาคหากมีหลายคน)" required class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
-                            </div>
-                        </div>
-                        <button type="submit" id="submit-btn" class="w-full py-3 bg-primary text-white rounded-lg font-medium hover:bg-blue-900 transition">บันทึกข้อมูล</button>
-                    </form>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนผู้เข้าร่วม (คน)</label>
+                    <input type="number" id="participants" min="0" class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
                 </div>
-            </main>
-        </div>
-    </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ผู้รับผิดชอบ (คั่นด้วยจุลภาค , หากมีหลายคน)</label>
+                    <input type="text" id="responsible" placeholder="เช่น สมชาย, สมหญิง" required class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none">
+                </div>
+                <button type="submit" id="submit-btn" class="w-full py-3 bg-primary text-white rounded-xl font-medium hover:bg-blue-900 transition shadow-md">
+                    บันทึกข้อมูล
+                </button>
+            </form>
+        </section>
+    </main>
 
-    <!-- Modal แสดงรายละเอียดกิจกรรม -->
+    <!-- Modal สำหรับแสดงรายละเอียดกิจกรรม -->
     <div id="eventModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 space-y-4">
-            <h3 id="modal-title" class="text-xl font-bold text-gray-800"></h3>
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4">
+            <h3 id="modal-title" class="text-xl font-bold text-gray-800 border-b pb-2"></h3>
             <div class="space-y-2 text-sm text-gray-600">
                 <p><strong>หน่วยงาน:</strong> <span id="modal-dept"></span></p>
                 <p><strong>วันที่:</strong> <span id="modal-date"></span></p>
                 <p><strong>เวลา:</strong> <span id="modal-time"></span></p>
-                <p><strong>จำนวนผู้เข้าร่วม:</strong> <span id="modal-participants"></span> คน</p>
-                <p><strong>ผู้รับผิดชอบ:</strong> <span id="modal-responsible"></span></p>
+                <p><strong>ผู้เข้าร่วม:</strong> <span id="modal-participants"></span> คน</p>
+                <p><strong>ผู้รับผิดชอบ:</strong> <span id="modal-responsible" class="text-primary font-medium"></span></p>
             </div>
-            <div class="flex justify-end pt-4">
-                <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 rounded-lg text-gray-700 hover:bg-gray-300 transition">ปิด</button>
-            </div>
+            <button onclick="closeModal()" class="w-full py-2.5 bg-gray-200 text-gray-800 rounded-xl font-medium hover:bg-gray-300 transition">
+                ปิดหน้าต่าง
+            </button>
         </div>
     </div>
 
+    <!-- Script สำหรับเมนูมือถือ -->
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('absolute');
+            sidebar.classList.toggle('h-full');
+        }
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
