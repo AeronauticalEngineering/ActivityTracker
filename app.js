@@ -80,10 +80,18 @@ function updateCalendarEvents(data) {
         let sTime = item.startTime ? item.startTime.substring(0, 5) : "00:00";
         let eTime = item.endTime ? item.endTime.substring(0, 5) : "23:59";
         
+        // จัดการกรณีข้ามคืน
+        let endDate = cleanDate;
+        if (eTime < sTime) {
+            let d = new Date(cleanDate);
+            d.setDate(d.getDate() + 1);
+            endDate = d.toISOString().split('T')[0];
+        }
+        
         return {
             title: item.activityName,
             start: `${cleanDate}T${sTime}`,
-            end: `${cleanDate}T${eTime}`,
+            end: `${endDate}T${eTime}`,
             backgroundColor: '#1d4ed8',
             borderColor: '#1e40af',
             extendedProps: {
@@ -211,7 +219,7 @@ async function submitForm(e) {
         startTime: startTime,
         endTime: endTime,
         participants: document.getElementById('participants').value,
-        responsible: document.getElementById('responsible').value // เปลี่ยนเป็น .value และใช้วงเล็บให้ถูกต้อง
+        responsible: document.getElementById('responsible').value
     };
 
     try {
@@ -224,7 +232,7 @@ async function submitForm(e) {
             body: JSON.stringify(payload)
         });
 
-        // Optimistic Update แสดงผลทันที
+        // Optimistic Update แสดงผลทันทีบนปฏิทินโดยไม่หายไป
         let newEventItem = {
             id: "ACT-" + new Date().getTime(),
             activityName: payload.activityName,
@@ -243,10 +251,6 @@ async function submitForm(e) {
 
         document.getElementById('activityForm').reset();
         showSuccessModal();
-
-        setTimeout(async () => {
-            await fetchActivityData();
-        }, 2000);
 
     } catch (error) {
         console.error("Error submitting form:", error);
