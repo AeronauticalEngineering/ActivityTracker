@@ -80,10 +80,18 @@ function updateCalendarEvents(data) {
         let sTime = item.startTime ? item.startTime.substring(0, 5) : "00:00";
         let eTime = item.endTime ? item.endTime.substring(0, 5) : "23:59";
         
+        // ตรวจสอบกรณีข้ามคืน (ถ้าเวลาสิ้นสุดน้อยกว่าเวลาเริ่ม ให้บวกวันที่สิ้นสุดเพิ่มไป 1 วัน)
+        let endDate = cleanDate;
+        if (eTime < sTime) {
+            let d = new Date(cleanDate);
+            d.setDate(d.getDate() + 1);
+            endDate = d.toISOString().split('T')[0];
+        }
+
         return {
             title: item.activityName,
             start: `${cleanDate}T${sTime}`,
-            end: `${cleanDate}T${eTime}`,
+            end: `${endDate}T${eTime}`,
             backgroundColor: '#1d4ed8',
             borderColor: '#1e40af',
             extendedProps: {
@@ -98,8 +106,9 @@ function updateCalendarEvents(data) {
         };
     });
     
-    calendar.removeAllEvents();
-    events.forEach(ev => calendar.addEvent(ev));
+    // ล้าง Event เก่าทั้งหมดแล้วใส่ชุดใหม่เข้าไปทีเดียว
+    calendar.removeAllEventSources();
+    calendar.addEventSource(events);
     calendar.render();
 }
 
