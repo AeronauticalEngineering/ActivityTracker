@@ -232,7 +232,7 @@ function initCalendar() {
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'th',
-        displayEventTime: true,
+        displayEventTime: false, // ปิดการแสดงเวลาบนปฏิทิน เหลือแต่ชื่อกิจกรรม
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -468,6 +468,40 @@ function openEditActivityModal() {
     document.getElementById('activityModal').classList.remove('hidden');
     loadUsersToDropdown();
     loadSupportsToDropdown();
+}
+
+async function deleteActivity() {
+    if (!currentSelectedEvent || !currentSelectedEvent.rowId) {
+        alert("ไม่พบรหัสกิจกรรมที่ต้องการลบ");
+        return;
+    }
+
+    if (!confirm("คุณต้องการลบกิจกรรมนี้ใช่หรือไม่?")) return;
+
+    let payload = {
+        type: "deleteActivity",
+        rowId: currentSelectedEvent.rowId
+    };
+
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+        });
+
+        closeModal();
+        showSuccessModal();
+
+        setTimeout(async () => {
+            await fetchActivityData();
+        }, 2000);
+
+    } catch (error) {
+        console.error("Error deleting activity:", error);
+        alert("เกิดข้อผิดพลาดในการลบข้อมูล");
+    }
 }
 
 function showSuccessModal() {
