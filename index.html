@@ -36,7 +36,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Sarabun', sans-serif; color: #0f172a; }
-        /* ปรับแต่ง FullCalendar ให้เข้ากับธีม Minimal ขาว-น้ำเงินเข้ม-ส้ม */
         .fc .fc-button-primary {
             background-color: #0f172a;
             border-color: #0f172a;
@@ -75,11 +74,11 @@
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col md:flex-row relative antialiased">
 
-    <!-- Mobile Overlay -->
-    <div id="sidebar-overlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-30 hidden md:hidden"></div>
+    <!-- Mobile Overlay (ปรับ z-index เป็น 50 ให้สูงกว่า) -->
+    <div id="sidebar-overlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden md:hidden"></div>
 
-    <!-- Sidebar / Navigation (Minimal White with Navy & Orange Accents) -->
-    <aside id="sidebar" class="bg-white border-r border-slate-200/80 text-navy-900 w-64 fixed md:sticky top-0 h-screen flex-shrink-0 p-6 flex flex-col justify-between z-45 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+    <!-- Sidebar / Navigation (ปรับ z-index เป็น 60 ให้แสดงผลและกดได้บนสุด) -->
+    <aside id="sidebar" class="bg-white border-r border-slate-200/80 text-navy-900 w-64 fixed md:sticky top-0 h-screen flex-shrink-0 p-6 flex flex-col justify-between z-60 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-2xl md:shadow-none">
         <div class="space-y-8">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -128,7 +127,7 @@
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
         <!-- Top Navbar -->
-        <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/80 h-16 flex items-center justify-between px-6 z-20 sticky top-0">
+        <header class="bg-white/85 backdrop-blur-md border-b border-slate-200/80 h-16 flex items-center justify-between px-6 z-20 sticky top-0">
             <div class="flex items-center space-x-3">
                 <button onclick="toggleMobileMenu()" class="md:hidden text-navy-900 p-2 focus:outline-none">
                     <i class="fa-solid fa-bars text-xl"></i>
@@ -141,7 +140,7 @@
                     <i class="fa-solid fa-plus"></i>
                     <span>เพิ่มกิจกรรม</span>
                 </button>
-                <span class="text-xs text-navy-800 bg-slate-100 px-3 py-1.5 rounded-full font-medium hidden sm:inline-block">กองวิชาวิศวกรรมการบิน</span>
+                <span class="text-xs text-navy-800 bg-slate-100 px-3 py-1.5 rounded-full font-medium hidden sm:inline-block">ระบบภายในองค์กร</span>
             </div>
         </header>
 
@@ -150,11 +149,11 @@
             
             <!-- TAB 1: Dashboard & Calendar -->
             <section id="tab-dashboard" class="space-y-6">
-                <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200/80">
+                <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200/80 shadow-xs">
                     <div id="calendar" class="w-full"></div>
                 </div>
 
-                <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200/80 space-y-4">
+                <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-slate-100">
                         <div>
                             <h3 class="text-lg font-bold text-navy-900">รายการกิจกรรมประจำเดือน</h3>
@@ -189,9 +188,8 @@
 
             <!-- TAB 2: Workload Dashboard -->
             <section id="tab-workload" class="hidden space-y-6">
-                <!-- Summary Dashboard Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
                         <div>
                             <span class="text-xs text-slate-400 font-medium block mb-1">จำนวนกิจกรรมทั้งหมด</span>
                             <h3 id="stat-total-activities" class="text-3xl font-extrabold text-navy-900">0</h3>
@@ -201,7 +199,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
                         <div>
                             <span class="text-xs text-slate-400 font-medium block mb-1">ชั่วโมงสะสมรวมทั้งหมด</span>
                             <h3 id="stat-total-hours" class="text-3xl font-extrabold text-brandOrange-500">0</h3>
@@ -211,7 +209,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
                         <div>
                             <span class="text-xs text-slate-400 font-medium block mb-1">บุคลากรที่มีภาระงาน</span>
                             <h3 id="stat-total-persons" class="text-3xl font-extrabold text-navy-800">0</h3>
@@ -222,8 +220,7 @@
                     </div>
                 </div>
 
-                <!-- รายละเอียดภาระงานรายบุคคล -->
-                <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200/80 space-y-6">
+                <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
                     <div class="border-b border-slate-100 pb-4">
                         <h3 class="text-lg font-bold text-navy-900">รายละเอียดภาระงาน (ชั่วโมงสะสม) รายบุคคล</h3>
                         <p class="text-xs text-slate-400 mt-0.5">สรุปผลรวมชั่วโมงการปฏิบัติงานแยกตามรายชื่อบุคลากรแต่ละท่าน</p>
@@ -235,7 +232,7 @@
             </section>
 
             <!-- TAB 3: Add User Form -->
-            <section id="tab-form" class="hidden space-y-6 bg-white p-6 md:p-8 rounded-2xl border border-slate-200/80 max-w-xl mx-auto">
+            <section id="tab-form" class="hidden space-y-6 bg-white p-6 md:p-8 rounded-2xl border border-slate-200/80 shadow-xs max-w-xl mx-auto">
                 <div class="border-b border-slate-100 pb-4">
                     <h4 class="text-lg font-bold text-navy-900">เพิ่มรายชื่อผู้รับผิดชอบใหม่</h4>
                     <p class="text-xs text-slate-400 mt-0.5">บันทึกชื่อบุคลากรใหม่เพื่อนำไปใช้เลือกในฟอร์มบันทึกกิจกรรม</p>
@@ -243,7 +240,7 @@
                 <form id="userForm" onsubmit="submitUserForm(event)" class="space-y-5">
                     <div>
                         <label class="block text-sm font-semibold text-navy-900 mb-1.5">ชื่อ - นามสกุล (ผู้รับผิดชอบ)</label>
-                        <input type="text" id="newDisplayName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:ring-2 focus:ring-navy-900/10 focus:outline-none text-sm transition" placeholder="เช่น อ.แอโร่ รักการบิน">
+                        <input type="text" id="newDisplayName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:ring-2 focus:ring-navy-900/10 focus:outline-none text-sm transition" placeholder="เช่น ดร.นพล อาจฤทธิ์">
                     </div>
                     <div class="flex justify-end space-x-3 pt-2">
                         <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition text-sm font-medium">ยกเลิก</button>
@@ -253,15 +250,15 @@
             </section>
 
             <!-- TAB 4: Add Support Form -->
-            <section id="tab-support" class="hidden space-y-6 bg-white p-6 md:p-8 rounded-2xl border border-slate-200/80 max-w-xl mx-auto">
+            <section id="tab-support" class="hidden space-y-6 bg-white p-6 md:p-8 rounded-2xl border border-slate-200/80 shadow-xs max-w-xl mx-auto">
                 <div class="border-b border-slate-100 pb-4">
                     <h4 class="text-lg font-bold text-navy-900">เพิ่มสิ่งสนับสนุนใหม่ในระบบ</h4>
                     <p class="text-xs text-slate-400 mt-0.5">บันทึกรายการสิ่งสนับสนุนหรืออุปกรณ์ใหม่เพื่อเลือกใช้ในกิจกรรม</p>
                 </div>
                 <form id="supportForm" onsubmit="submitSupportForm(event)" class="space-y-5">
                     <div>
-                        <label class="block text-sm font-semibold text-navy-900 mb-1.5">ชื่อสิ่งสนับสนุน ห้องปฏิบัติการ</label>
-                        <input type="text" id="newSupportName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:ring-2 focus:ring-navy-900/10 focus:outline-none text-sm transition" placeholder="เช่น ห้องปฏิบัติการ สิ่งสนับสนุน">
+                        <label class="block text-sm font-semibold text-navy-900 mb-1.5">ชื่อสิ่งสนับสนุน / อุปกรณ์ / งบประมาณ</label>
+                        <input type="text" id="newSupportName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:ring-2 focus:ring-navy-900/10 focus:outline-none text-sm transition" placeholder="เช่น ห้องประชุมใหญ่, โพรเจกเตอร์, งบอาหารกลางวัน">
                     </div>
                     <div class="flex justify-end space-x-3 pt-2">
                         <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition text-sm font-medium">ยกเลิก</button>
@@ -350,7 +347,7 @@
         </div>
     </div>
 
-    <!-- Modal: Card รายละเอียดกิจกรรม (Minimal Navy & Orange) -->
+    <!-- Modal: Card รายละเอียดกิจกรรม -->
     <div id="eventModal" class="fixed inset-0 bg-slate-900/40 hidden flex items-center justify-center p-4 z-50 backdrop-blur-xs">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all">
             <div class="bg-navy-900 p-6 text-white relative">
@@ -406,7 +403,7 @@
         </div>
     </div>
 
-    <!-- Modal: บันทึกสำเร็จ (Minimal Navy & Orange) -->
+    <!-- Modal: บันทึกสำเร็จ -->
     <div id="successModal" class="fixed inset-0 bg-slate-900/40 hidden flex items-center justify-center p-4 z-50 backdrop-blur-xs">
         <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 p-6 text-center space-y-4 transform transition-all">
             <div class="w-16 h-16 bg-brandOrange-50 text-brandOrange-500 rounded-2xl flex items-center justify-center mx-auto text-3xl border border-brandOrange-100">
@@ -434,7 +431,7 @@
 
         function openAddActivityModal() {
             document.getElementById('activityModal').classList.remove('hidden');
-            loadUsersToDropdown();
+            loadUsersToDropdownS(); // แก้ไขเรียกฟังก์ชันโหลดให้ครบ
             loadSupportsToDropdown();
         }
 
