@@ -2,21 +2,25 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxrvVbhFYpCR0M-gegs6u1h
 let calendar;
 let allEvents = [];
 let globalUsersList = [];
+let globalSupportsList = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     initCalendar();
     fetchActivityData();
     loadUsersToDropdown();
+    loadSupportsToDropdown();
 });
 
 function switchTab(tab) {
     document.getElementById('tab-dashboard').classList.add('hidden');
     document.getElementById('tab-workload').classList.add('hidden');
     document.getElementById('tab-form').classList.add('hidden');
+    document.getElementById('tab-support').classList.add('hidden');
     
     document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
     document.getElementById('btn-workload').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
     document.getElementById('btn-form').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
+    document.getElementById('btn-support').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
 
     if (tab === 'dashboard') {
         document.getElementById('tab-dashboard').classList.remove('hidden');
@@ -35,6 +39,10 @@ function switchTab(tab) {
         document.getElementById('tab-form').classList.remove('hidden');
         document.getElementById('btn-form').className = 'w-full text-left px-4 py-3 rounded-xl bg-blue-800 transition flex items-center space-x-3 shadow-inner text-sm font-medium';
         document.getElementById('page-title').innerText = 'บันทึกผู้รับผิดชอบใหม่';
+    } else if (tab === 'support') {
+        document.getElementById('tab-support').classList.remove('hidden');
+        document.getElementById('btn-support').className = 'w-full text-left px-4 py-3 rounded-xl bg-blue-800 transition flex items-center space-x-3 shadow-inner text-sm font-medium';
+        document.getElementById('page-title').innerText = 'บันทึกสิ่งสนับสนุนใหม่';
     }
 
     if (window.innerWidth < 768) {
@@ -42,6 +50,7 @@ function switchTab(tab) {
     }
 }
 
+// โหลดรายชื่อผู้รับผิดชอบ
 async function loadUsersToDropdown() {
     if (!API_URL) return;
     try {
@@ -49,7 +58,6 @@ async function loadUsersToDropdown() {
         let result = await response.json();
         if (result.status === "success" && Array.isArray(result.data)) {
             globalUsersList = result.data;
-            
             let selects = document.querySelectorAll('.responsible-select');
             selects.forEach(select => {
                 let currentValue = select.value;
@@ -65,6 +73,32 @@ async function loadUsersToDropdown() {
         }
     } catch (error) {
         console.error("Error loading users:", error);
+    }
+}
+
+// โหลดรายชื่อสิ่งสนับสนุน
+async function loadSupportsToDropdown() {
+    if (!API_URL) return;
+    try {
+        let response = await fetch(`${API_URL}?action=getSupports&_=${new Date().getTime()}`);
+        let result = await response.json();
+        if (result.status === "success" && Array.isArray(result.data)) {
+            globalSupportsList = result.data;
+            let selects = document.querySelectorAll('.support-select');
+            selects.forEach(select => {
+                let currentValue = select.value;
+                select.innerHTML = '<option value="">-- เลือกสิ่งสนับสนุน --</option>';
+                globalSupportsList.forEach(name => {
+                    let opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    select.appendChild(opt);
+                });
+                select.value = currentValue;
+            });
+        }
+    } catch (error) {
+        console.error("Error loading supports:", error);
     }
 }
 
@@ -103,6 +137,37 @@ function addResponsibleField() {
     container.appendChild(div);
 }
 
+function addSupportField() {
+    let container = document.getElementById('support-container');
+    let div = document.createElement('div');
+    div.className = "flex items-center space-x-2";
+    
+    let select = document.createElement('select');
+    select.name = "support";
+    select.className = "support-select w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none bg-white text-sm";
+    
+    select.innerHTML = '<option value="">-- เลือกสิ่งสนับสนุน --</option>';
+    globalSupportsList.forEach(name => {
+        let opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+    });
+    
+    let removeBtn = document.createElement('button');
+    removeBtn.type = "button";
+    removeBtn.className = "px-3 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition text-sm";
+    removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+    removeBtn.onclick = function() {
+        container.removeChild(div);
+    };
+    
+    div.appendChild(select);
+    div.appendChild(removeBtn);
+    container.appendChild(div);
+}
+
+// บันทึก User ใหม่ (ไม่มีช่อง Username)
 async function submitUserForm(e) {
     e.preventDefault();
     let btn = document.getElementById('user-submit-btn');
@@ -111,8 +176,7 @@ async function submitUserForm(e) {
 
     let payload = {
         type: "addUser",
-        displayName: document.getElementById('newDisplayName').value,
-        username: document.getElementById('newUsername').value
+        displayName: document.getElementById('newDisplayName').value
     };
 
     try {
@@ -131,6 +195,38 @@ async function submitUserForm(e) {
         alert("เกิดข้อผิดพลาดในการบันทึก");
     } finally {
         btn.innerText = "บันทึกผู้รับผิดชอบ";
+        btn.disabled = false;
+    }
+}
+
+// บันทึก Support ใหม่
+async function submitSupportForm(e) {
+    e.preventDefault();
+    let btn = document.getElementById('support-submit-btn');
+    btn.innerText = "กำลังบันทึก...";
+    btn.disabled = true;
+
+    let payload = {
+        type: "addSupport",
+        supportName: document.getElementById('newSupportName').value
+    };
+
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+        });
+
+        document.getElementById('supportForm').reset();
+        showSuccessModal();
+        loadSupportsToDropdown();
+    } catch (error) {
+        console.error("Error saving support:", error);
+        alert("เกิดข้อผิดพลาดในการบันทึก");
+    } finally {
+        btn.innerText = "บันทึกสิ่งสนับสนุน";
         btn.disabled = false;
     }
 }
@@ -217,6 +313,7 @@ function updateCalendarEvents(data) {
                 time: `${sTime} - ${eTime} น.`,
                 participants: item.participants,
                 responsible: item.responsible,
+                supports: item.supports || "-",
                 workHours: item.workHours
             }
         };
@@ -246,7 +343,7 @@ function updateMonthlyTable(data, currentDate) {
     tbody.innerHTML = '';
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">ยังไม่มีข้อมูลกิจกรรมในเดือนนี้</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">ยังไม่มีข้อมูลกิจกรรมในเดือนนี้</td></tr>`;
         return;
     }
 
@@ -265,6 +362,7 @@ function updateMonthlyTable(data, currentDate) {
             <td class="p-3 font-semibold text-primary">${item.activityName}</td>
             <td class="p-3 text-gray-600">${item.department || '-'}</td>
             <td class="p-3 text-gray-700 font-medium">${item.responsible || '-'}</td>
+            <td class="p-3 text-gray-600 text-xs">${item.supports || '-'}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -321,6 +419,7 @@ function showModal(data) {
     document.getElementById('modal-time').innerText = `${data.startTime || '00:00'} - ${data.endTime || '23:59'} น.`;
     document.getElementById('modal-participants').innerText = data.participants || "0";
     document.getElementById('modal-responsible').innerText = data.responsible || "-";
+    document.getElementById('modal-supports').innerText = data.supports || "-";
     document.getElementById('eventModal').classList.remove('hidden');
 }
 
@@ -357,12 +456,21 @@ async function submitActivityForm(e) {
     }
     let calcHours = Math.max(0, (endMins - startMins) / 60);
 
+    // รวบรวมผู้รับผิดชอบ
     let responsibleSelects = document.querySelectorAll('.responsible-select');
     let responsibleArray = [];
     responsibleSelects.forEach(sel => {
         if (sel.value) responsibleArray.push(sel.value);
     });
     let combinedResponsible = responsibleArray.join(', ');
+
+    // รวบรวมสิ่งสนับสนุน
+    let supportSelects = document.querySelectorAll('.support-select');
+    let supportArray = [];
+    supportSelects.forEach(sel => {
+        if (sel.value) supportArray.push(sel.value);
+    });
+    let combinedSupports = supportArray.join(', ');
 
     let payload = {
         activityName: document.getElementById('activityName').value,
@@ -371,7 +479,8 @@ async function submitActivityForm(e) {
         startTime: startTime,
         endTime: endTime,
         participants: document.getElementById('participants').value,
-        responsible: combinedResponsible
+        responsible: combinedResponsible,
+        supports: combinedSupports
     };
 
     try {
