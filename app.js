@@ -12,6 +12,15 @@ document.addEventListener('DOMContentLoaded', function() {
     loadSupportsToDropdown();
 });
 
+function showLoading(message = "กำลังโหลดข้อมูล...") {
+    document.getElementById('loading-text').innerText = message;
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
 function switchTab(tab) {
     const tabs = ['dashboard', 'workload', 'form', 'support'];
     tabs.forEach(t => {
@@ -168,6 +177,7 @@ async function submitUserForm(e) {
     let btn = document.getElementById('user-submit-btn');
     btn.innerText = "กำลังบันทึก...";
     btn.disabled = true;
+    showLoading("กำลังบันทึกผู้รับผิดชอบใหม่...");
 
     let payload = {
         type: "addUser",
@@ -183,10 +193,12 @@ async function submitUserForm(e) {
         });
 
         document.getElementById('userForm').reset();
+        hideLoading();
         showSuccessModal();
         loadUsersToDropdown();
     } catch (error) {
         console.error("Error saving user:", error);
+        hideLoading();
         alert("เกิดข้อผิดพลาดในการบันทึก");
     } finally {
         btn.innerText = "บันทึกผู้รับผิดชอบ";
@@ -199,6 +211,7 @@ async function submitSupportForm(e) {
     let btn = document.getElementById('support-submit-btn');
     btn.innerText = "กำลังบันทึก...";
     btn.disabled = true;
+    showLoading("กำลังบันทึกห้องปฏิบัติการใหม่...");
 
     let payload = {
         type: "addSupport",
@@ -214,10 +227,12 @@ async function submitSupportForm(e) {
         });
 
         document.getElementById('supportForm').reset();
+        hideLoading();
         showSuccessModal();
         loadSupportsToDropdown();
     } catch (error) {
         console.error("Error saving support:", error);
+        hideLoading();
         alert("เกิดข้อผิดพลาดในการบันทึก");
     } finally {
         btn.innerText = "บันทึกสิ่งสนับสนุน";
@@ -230,19 +245,19 @@ function initCalendar() {
     if (!calendarEl) return;
     
     calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth', // หน้าแรกเปิดมาแบบตารางเดือนปกติ (หรือเปลี่ยนเป็น listMonth หากต้องการเปิดมาเป็นรายการ)
+        initialView: 'dayGridMonth',
         locale: 'th',
-        displayEventTime: false, // ซ่อนเวลาบนปฏิทินช่องปกติ เหลือแต่ชื่อกิจกรรม
+        displayEventTime: false,
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,listMonth' // ใช้ listMonth ซึ่งเป็นมุมมองรายการทั้งเดือนโดยปริยายของ FullCalendar
+            right: 'dayGridMonth,timeGridWeek,listMonth'
         },
         buttonText: {
             today: 'วันนี้',
             month: 'ตารางเดือน',
             week: 'สัปดาห์',
-            list: 'กำหนดการทั้งเดือน' // เปลี่ยนชื่อปุ่มให้สื่อความหมายชัดเจน
+            list: 'กำหนดการทั้งเดือน'
         },
         views: {
             listMonth: {
@@ -263,6 +278,7 @@ function initCalendar() {
 
 async function fetchActivityData() {
     if (!API_URL) return;
+    showLoading("กำลังโหลดข้อมูลกิจกรรม...");
     try {
         let response = await fetch(`${API_URL}?action=getData&_=${new Date().getTime()}`, {
             method: 'GET',
@@ -279,6 +295,8 @@ async function fetchActivityData() {
         }
     } catch (error) {
         console.error("Error fetching data:", error);
+    } finally {
+        hideLoading();
     }
 }
 
@@ -303,9 +321,6 @@ function updateCalendarEvents(data) {
             title: item.activityName || "ไม่มีชื่อกิจกรรม",
             start: `${cleanDate}T${sTime}`,
             end: `${endDate}T${eTime}`,
-            backgroundColor: '#0f172a',
-            borderColor: '#0f172a',
-            textColor: '#ffffff',
             extendedProps: {
                 rowId: item.rowId || item.id,
                 activityName: item.activityName,
@@ -483,6 +498,8 @@ async function deleteActivity() {
 
     if (!confirm("คุณต้องการลบกิจกรรมนี้ใช่หรือไม่?")) return;
 
+    showLoading("กำลังลบข้อมูลกิจกรรม...");
+
     let payload = {
         type: "deleteActivity",
         rowId: currentSelectedEvent.rowId
@@ -497,14 +514,16 @@ async function deleteActivity() {
         });
 
         closeModal();
-        showSuccessModal();
 
         setTimeout(async () => {
             await fetchActivityData();
-        }, 2000);
+            hideLoading();
+            showSuccessModal();
+        }, 1500);
 
     } catch (error) {
         console.error("Error deleting activity:", error);
+        hideLoading();
         alert("เกิดข้อผิดพลาดในการลบข้อมูล");
     }
 }
@@ -521,11 +540,9 @@ function closeSuccessModal() {
 
 async function submitActivityForm(e) {
     e.preventDefault();
-    let btn = document.getElementById('submit-btn');
-    btn.innerText = "กำลังบันทึก...";
-    btn.disabled = true;
-
     let editId = document.getElementById('editActivityId').value;
+    showLoading(editId ? "กำลังอัปเดตข้อมูลกิจกรรม..." : "กำลังบันทึกกิจกรรมใหม่...");
+
     let startTime = document.getElementById('startTime').value;
     let endTime = document.getElementById('endTime').value;
 
@@ -566,17 +583,16 @@ async function submitActivityForm(e) {
 
         document.getElementById('activityForm').reset();
         closeAddActivityModal();
-        showSuccessModal();
 
         setTimeout(async () => {
             await fetchActivityData();
-        }, 2000);
+            hideLoading();
+            showSuccessModal();
+        }, 1500);
 
     } catch (error) {
         console.error("Error submitting form:", error);
+        hideLoading();
         alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-    } finally {
-        btn.innerText = "บันทึกกิจกรรม";
-        btn.disabled = false;
     }
 }
