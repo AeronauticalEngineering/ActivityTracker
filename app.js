@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadSupportsToDropdown();
 });
 
-function showLoading(message = "กำลังโหลดข้อมูล...") {
+function showLoading(message = "กรุณารอสักครู่...") {
     document.getElementById('loading-text').innerText = message;
     document.getElementById('loadingOverlay').classList.remove('hidden');
 }
@@ -48,8 +48,10 @@ function switchTab(tab) {
         calculateWorkload(allEvents);
     } else if (tab === 'form') {
         document.getElementById('page-title').innerText = 'บันทึกผู้รับผิดชอบใหม่';
+        loadUsersToDropdown();
     } else if (tab === 'support') {
         document.getElementById('page-title').innerText = 'บันทึกห้องปฏิบัติการใหม่';
+        loadSupportsToDropdown();
     }
 
     if (window.innerWidth < 768) {
@@ -76,6 +78,23 @@ async function loadUsersToDropdown() {
                 });
                 select.value = currentValue;
             });
+
+            let tbody = document.getElementById('existing-users-table');
+            if (tbody) {
+                tbody.innerHTML = '';
+                if (globalUsersList.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-slate-400">ยังไม่มีรายชื่อผู้รับผิดชอบ</td></tr>`;
+                } else {
+                    globalUsersList.forEach((name, index) => {
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 w-16 text-slate-500">${index + 1}</td>
+                                <td class="p-3 font-medium text-navy-900">${name}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
         }
     } catch (error) {
         console.error("Error loading users:", error);
@@ -101,6 +120,23 @@ async function loadSupportsToDropdown() {
                 });
                 select.value = currentValue;
             });
+
+            let tbody = document.getElementById('existing-supports-table');
+            if (tbody) {
+                tbody.innerHTML = '';
+                if (globalSupportsList.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="2" class="p-4 text-center text-slate-400">ยังไม่มีรายการสิ่งสนับสนุน</td></tr>`;
+                } else {
+                    globalSupportsList.forEach((name, index) => {
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-3 w-16 text-slate-500">${index + 1}</td>
+                                <td class="p-3 font-medium text-navy-900">${name}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            }
         }
     } catch (error) {
         console.error("Error loading supports:", error);
@@ -177,7 +213,7 @@ async function submitUserForm(e) {
     let btn = document.getElementById('user-submit-btn');
     btn.innerText = "กำลังบันทึก...";
     btn.disabled = true;
-    showLoading("กำลังบันทึกผู้รับผิดชอบใหม่...");
+    showLoading("กรุณารอสักครู่...");
 
     let payload = {
         type: "addUser",
@@ -211,7 +247,7 @@ async function submitSupportForm(e) {
     let btn = document.getElementById('support-submit-btn');
     btn.innerText = "กำลังบันทึก...";
     btn.disabled = true;
-    showLoading("กำลังบันทึกห้องปฏิบัติการใหม่...");
+    showLoading("กรุณารอสักครู่...");
 
     let payload = {
         type: "addSupport",
@@ -278,7 +314,7 @@ function initCalendar() {
 
 async function fetchActivityData() {
     if (!API_URL) return;
-    showLoading("กำลังโหลดข้อมูลกิจกรรม...");
+    showLoading("กรุณารอสักครู่...");
     try {
         let response = await fetch(`${API_URL}?action=getData&_=${new Date().getTime()}`, {
             method: 'GET',
@@ -498,7 +534,7 @@ async function deleteActivity() {
 
     if (!confirm("คุณต้องการลบกิจกรรมนี้ใช่หรือไม่?")) return;
 
-    showLoading("กำลังลบข้อมูลกิจกรรม...");
+    showLoading("กรุณารอสักครู่...");
 
     let payload = {
         type: "deleteActivity",
@@ -541,7 +577,7 @@ function closeSuccessModal() {
 async function submitActivityForm(e) {
     e.preventDefault();
     let editId = document.getElementById('editActivityId').value;
-    showLoading(editId ? "กำลังอัปเดตข้อมูลกิจกรรม..." : "กำลังบันทึกกิจกรรมใหม่...");
+    showLoading("กรุณารอสักครู่...");
 
     let startTime = document.getElementById('startTime').value;
     let endTime = document.getElementById('endTime').value;
