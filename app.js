@@ -10,30 +10,38 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function switchTab(tab) {
+    document.getElementById('tab-dashboard').classList.add('hidden');
+    document.getElementById('tab-workload').classList.add('hidden');
+    document.getElementById('tab-form').classList.add('hidden');
+    
+    document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
+    document.getElementById('btn-workload').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
+    document.getElementById('btn-form').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
+
     if (tab === 'dashboard') {
         document.getElementById('tab-dashboard').classList.remove('hidden');
-        document.getElementById('tab-form').classList.add('hidden');
-        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition flex items-center space-x-3';
-        document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition flex items-center space-x-3';
+        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-3 rounded-xl bg-blue-800 transition flex items-center space-x-3 shadow-inner text-sm font-medium';
         document.getElementById('page-title').innerText = 'Dashboard กิจกรรม';
         if (calendar) {
             calendar.updateSize();
             calendar.render();
         }
-    } else {
-        document.getElementById('tab-dashboard').classList.add('hidden');
+    } else if (tab === 'workload') {
+        document.getElementById('tab-workload').classList.remove('hidden');
+        document.getElementById('btn-workload').className = 'w-full text-left px-4 py-3 rounded-xl bg-blue-800 transition flex items-center space-x-3 shadow-inner text-sm font-medium';
+        document.getElementById('page-title').innerText = 'รายงานภาระงาน (ชั่วโมงสะสม)';
+        calculateWorkload(allEvents);
+    } else if (tab === 'form') {
         document.getElementById('tab-form').classList.remove('hidden');
-        document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition flex items-center space-x-3';
-        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition flex items-center space-x-3';
+        document.getElementById('btn-form').className = 'w-full text-left px-4 py-3 rounded-xl bg-blue-800 transition flex items-center space-x-3 shadow-inner text-sm font-medium';
         document.getElementById('page-title').innerText = 'บันทึกผู้รับผิดชอบใหม่';
     }
-    // ปิดเมนวมือถือเมื่อกดเปลี่ยนหน้า
+
     if (window.innerWidth < 768) {
         toggleMobileMenu();
     }
 }
 
-// โหลดรายชื่อผู้รับผิดชอบมาใส่ Dropdown
 async function loadUsersToDropdown() {
     if (!API_URL) return;
     try {
@@ -60,7 +68,6 @@ async function loadUsersToDropdown() {
     }
 }
 
-// เพิ่มแถว Dropdown ผู้รับผิดชอบ
 function addResponsibleField() {
     let container = document.getElementById('responsible-container');
     let div = document.createElement('div');
@@ -68,7 +75,7 @@ function addResponsibleField() {
     
     let select = document.createElement('select');
     select.name = "responsible";
-    select.className = "responsible-select w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none bg-white text-sm";
+    select.className = "responsible-select w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none bg-white text-sm";
     select.required = true;
     
     select.innerHTML = '<option value="">-- เลือกผู้รับผิดชอบ --</option>';
@@ -81,7 +88,7 @@ function addResponsibleField() {
     
     let removeBtn = document.createElement('button');
     removeBtn.type = "button";
-    removeBtn.className = "px-3 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition text-sm";
+    removeBtn.className = "px-3 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition text-sm";
     removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
     removeBtn.onclick = function() {
         if (container.children.length > 1) {
@@ -96,7 +103,6 @@ function addResponsibleField() {
     container.appendChild(div);
 }
 
-// บันทึก User ใหม่ลงฐานข้อมูล (users sheet)
 async function submitUserForm(e) {
     e.preventDefault();
     let btn = document.getElementById('user-submit-btn');
@@ -117,10 +123,9 @@ async function submitUserForm(e) {
             body: JSON.stringify(payload)
         });
 
-        alert("บันทึกผู้รับผิดชอบใหม่สำเร็จ!");
         document.getElementById('userForm').reset();
+        showSuccessModal();
         loadUsersToDropdown();
-        switchTab('dashboard');
     } catch (error) {
         console.error("Error saving user:", error);
         alert("เกิดข้อผิดพลาดในการบันทึก");
@@ -150,7 +155,6 @@ function initCalendar() {
             list: 'กำหนดการ'
         },
         datesSet: function(info) {
-            // อัปเดตตารางรายการกิจกรรมตามเดือนที่แสดงบนปฏิทิน
             updateMonthlyTable(allEvents, info.view.currentStart);
         },
         events: [],
@@ -222,7 +226,6 @@ function updateCalendarEvents(data) {
     events.forEach(event => calendar.addEvent(event));
 }
 
-// อัปเดตตารางรายการกิจกรรมประจำเดือนใต้ปฏิทิน
 function updateMonthlyTable(data, currentDate) {
     let year = currentDate.getFullYear();
     let month = currentDate.getMonth();
@@ -236,7 +239,6 @@ function updateMonthlyTable(data, currentDate) {
         return d.getFullYear() === year && d.getMonth() === month;
     });
 
-    // เรียงลำดับตามวันที่
     filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     let tbody = document.getElementById('monthly-activity-table');
@@ -244,7 +246,7 @@ function updateMonthlyTable(data, currentDate) {
     tbody.innerHTML = '';
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">ยังไม่มีข้อมูลกิจกรรมในเดือนนี้</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">ยังไม่มีข้อมูลกิจกรรมในเดือนนี้</td></tr>`;
         return;
     }
 
@@ -254,15 +256,15 @@ function updateMonthlyTable(data, currentDate) {
         let timeStr = `${item.startTime} - ${item.endTime} น.`;
 
         let tr = document.createElement('tr');
-        tr.className = "hover:bg-blue-50/50 transition cursor-pointer";
+        tr.className = "hover:bg-blue-50/60 transition cursor-pointer";
         tr.onclick = function() { showModal(item); };
         
         tr.innerHTML = `
             <td class="p-3 font-medium text-gray-800">${formattedDate}</td>
-            <td class="p-3 text-gray-600">${timeStr}</td>
+            <td class="p-3 text-gray-600 text-xs">${timeStr}</td>
             <td class="p-3 font-semibold text-primary">${item.activityName}</td>
             <td class="p-3 text-gray-600">${item.department || '-'}</td>
-            <td class="p-3 text-gray-700">${item.responsible || '-'}</td>
+            <td class="p-3 text-gray-700 font-medium">${item.responsible || '-'}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -287,20 +289,25 @@ function calculateWorkload(data) {
     container.innerHTML = '';
 
     if (Object.keys(workloadMap).length === 0) {
-        container.innerHTML = '<p class="text-gray-500 text-sm col-span-3">ยังไม่มีข้อมูลภาระงาน</p>';
+        container.innerHTML = '<p class="text-gray-500 text-sm col-span-full py-8 text-center">ยังไม่มีข้อมูลภาระงานในระบบ</p>';
         return;
     }
 
     for (let [person, hours] of Object.entries(workloadMap)) {
         container.innerHTML += `
-            <div class="p-4 bg-blue-50 border border-blue-100 rounded-lg flex justify-between items-center shadow-sm">
-                <div>
-                    <h4 class="font-medium text-gray-800">${person}</h4>
-                    <p class="text-xs text-gray-500">ผู้รับผิดชอบกิจกรรม</p>
+            <div class="p-5 bg-white border border-gray-100 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md transition">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-primary flex items-center justify-center font-bold text-lg">
+                        ${person.charAt(0)}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-800 text-base">${person}</h4>
+                        <p class="text-xs text-gray-400">ผู้รับผิดชอบกิจกรรม</p>
+                    </div>
                 </div>
                 <div class="text-right">
-                    <span class="text-lg font-bold text-primary">${hours.toFixed(1)}</span>
-                    <span class="text-xs text-gray-600 block">ชั่วโมงสะสม</span>
+                    <span class="text-xl font-extrabold text-primary">${hours.toFixed(1)}</span>
+                    <span class="text-xs text-gray-500 block font-medium">ชั่วโมงสะสม</span>
                 </div>
             </div>
         `;
@@ -319,6 +326,16 @@ function showModal(data) {
 
 function closeModal() {
     document.getElementById('eventModal').classList.add('hidden');
+}
+
+function showSuccessModal() {
+    document.getElementById('successModal').classList.remove('hidden');
+}
+
+function closeSuccessModal() {
+    document.getElementById('successModal').classList.add('hidden');
+    switchTab('dashboard');
+    fetchActivityData();
 }
 
 async function submitActivityForm(e) {
@@ -367,7 +384,7 @@ async function submitActivityForm(e) {
 
         document.getElementById('activityForm').reset();
         closeAddActivityModal();
-        alert("บันทึกกิจกรรมสำเร็จ!");
+        showSuccessModal();
 
         setTimeout(async () => {
             await fetchActivityData();
