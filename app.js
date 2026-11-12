@@ -1,7 +1,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbxrvVbhFYpCR0M-gegs6u1hl-sl51T7fcMLV7CdaOp-Gjzydwr_pyYTx261JAX8i4s0/exec";
 let calendar;
 let allEvents = [];
-let globalUsersList = []; // เก็บรายชื่อผู้ใช้สำหรับสร้าง Dropdown เพิ่มเติม
+let globalUsersList = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     initCalendar();
@@ -29,7 +29,6 @@ function switchTab(tab) {
     }
 }
 
-// โหลดรายชื่อผู้รับผิดชอบจากฐานข้อมูลมาใส่ Dropdown
 async function loadUsersToDropdown() {
     if (!API_URL) return;
     try {
@@ -56,7 +55,6 @@ async function loadUsersToDropdown() {
     }
 }
 
-// ฟังก์ชันเพิ่มช่องเลือกผู้รับผิดชอบ (ปุ่ม +)
 function addResponsibleField() {
     let container = document.getElementById('responsible-container');
     let div = document.createElement('div');
@@ -274,4 +272,49 @@ async function submitForm(e) {
     let endMins = Number(endArr[0]) * 60 + Number(endArr[1]);
     
     if (endMins < startMins) {
-        endMins += 24 * 6
+        endMins += 24 * 60;
+    }
+    let calcHours = Math.max(0, (endMins - startMins) / 60);
+
+    let responsibleSelects = document.querySelectorAll('.responsible-select');
+    let responsibleArray = [];
+    responsibleSelects.forEach(sel => {
+        if (sel.value) responsibleArray.push(sel.value);
+    });
+    let combinedResponsible = responsibleArray.join(', ');
+
+    let payload = {
+        activityName: document.getElementById('activityName').value,
+        department: document.getElementById('department').value,
+        date: document.getElementById('date').value,
+        startTime: startTime,
+        endTime: endTime,
+        participants: document.getElementById('participants').value,
+        responsible: combinedResponsible
+    };
+
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'text/plain'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        document.getElementById('activityForm').reset();
+        showSuccessModal();
+
+        setTimeout(async () => {
+            await fetchActivityData();
+        }, 2000);
+
+    } catch (error) {
+        console.error("Error submitting form:", error);
+        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } finally {
+        btn.innerText = "บันทึกข้อมูล";
+        btn.disabled = false;
+    }
+}
