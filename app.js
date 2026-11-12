@@ -3,6 +3,7 @@ let calendar;
 let allEvents = [];
 let globalUsersList = [];
 let globalSupportsList = [];
+let currentSelectedEvent = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     initCalendar();
@@ -16,14 +17,14 @@ function switchTab(tab) {
     tabs.forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
         const btn = document.getElementById(`btn-${t}`);
-        btn.className = 'w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-navy-900 transition flex items-center space-x-3 text-sm font-medium';
+        btn.className = 'w-full text-left px-3.5 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-navy-900 transition flex items-center space-x-3 text-xs md:text-sm font-medium';
         const icon = btn.querySelector('i');
         if (icon) icon.classList.remove('text-brandOrange-500');
     });
 
     document.getElementById(`tab-${tab}`).classList.remove('hidden');
     const activeBtn = document.getElementById(`btn-${tab}`);
-    activeBtn.className = 'w-full text-left px-4 py-3 rounded-xl bg-navy-900 text-white transition flex items-center space-x-3 text-sm font-medium';
+    activeBtn.className = 'w-full text-left px-3.5 py-2.5 rounded-xl bg-navy-900 text-white transition flex items-center space-x-3 text-xs md:text-sm font-medium';
     const activeIcon = activeBtn.querySelector('i');
     if (activeIcon) activeIcon.classList.add('text-brandOrange-500');
 
@@ -39,7 +40,7 @@ function switchTab(tab) {
     } else if (tab === 'form') {
         document.getElementById('page-title').innerText = 'บันทึกผู้รับผิดชอบใหม่';
     } else if (tab === 'support') {
-        document.getElementById('page-title').innerText = 'บันทึกสิ่งสนับสนุนใหม่';
+        document.getElementById('page-title').innerText = 'บันทึกห้องปฏิบัติการใหม่';
     }
 
     if (window.innerWidth < 768) {
@@ -82,7 +83,7 @@ async function loadSupportsToDropdown() {
             let selects = document.querySelectorAll('.support-select');
             selects.forEach(select => {
                 let currentValue = select.value;
-                select.innerHTML = '<option value="">-- เลือกสิ่งสนับสนุน --</option>';
+                select.innerHTML = '<option value="">-- เลือกห้องปฏิบัติการ / สิ่งสนับสนุน --</option>';
                 globalSupportsList.forEach(name => {
                     let opt = document.createElement('option');
                     opt.value = name;
@@ -100,11 +101,11 @@ async function loadSupportsToDropdown() {
 function addResponsibleField() {
     let container = document.getElementById('responsible-container');
     let div = document.createElement('div');
-    div.className = "flex items-center space-x-2";
+    div.className = "flex items-center space-x-2 w-full";
     
     let select = document.createElement('select');
     select.name = "responsible";
-    select.className = "responsible-select w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none bg-white text-sm";
+    select.className = "responsible-select w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none bg-white text-sm";
     select.required = true;
     
     select.innerHTML = '<option value="">-- เลือกผู้รับผิดชอบ --</option>';
@@ -117,7 +118,7 @@ function addResponsibleField() {
     
     let removeBtn = document.createElement('button');
     removeBtn.type = "button";
-    removeBtn.className = "px-3 py-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-red-50 hover:text-red-600 transition text-sm";
+    removeBtn.className = "px-3 py-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-red-50 hover:text-red-600 transition text-sm shrink-0";
     removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
     removeBtn.onclick = function() {
         if (container.children.length > 1) {
@@ -135,13 +136,13 @@ function addResponsibleField() {
 function addSupportField() {
     let container = document.getElementById('support-container');
     let div = document.createElement('div');
-    div.className = "flex items-center space-x-2";
+    div.className = "flex items-center space-x-2 w-full";
     
     let select = document.createElement('select');
     select.name = "support";
-    select.className = "support-select w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none bg-white text-sm";
+    select.className = "support-select w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none bg-white text-sm";
     
-    select.innerHTML = '<option value="">-- เลือกสิ่งสนับสนุน --</option>';
+    select.innerHTML = '<option value="">-- เลือกห้องปฏิบัติการ / สิ่งสนับสนุน --</option>';
     globalSupportsList.forEach(name => {
         let opt = document.createElement('option');
         opt.value = name;
@@ -151,7 +152,7 @@ function addSupportField() {
     
     let removeBtn = document.createElement('button');
     removeBtn.type = "button";
-    removeBtn.className = "px-3 py-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-red-50 hover:text-red-600 transition text-sm";
+    removeBtn.className = "px-3 py-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-red-50 hover:text-red-600 transition text-sm shrink-0";
     removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
     removeBtn.onclick = function() {
         container.removeChild(div);
@@ -231,7 +232,7 @@ function initCalendar() {
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         locale: 'th',
-        displayEventTime: false,
+        displayEventTime: true,
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -301,9 +302,12 @@ function updateCalendarEvents(data) {
             borderColor: '#0f172a',
             textColor: '#ffffff',
             extendedProps: {
+                rowId: item.rowId || item.id,
                 activityName: item.activityName,
                 department: item.department,
                 date: cleanDate,
+                startTime: sTime,
+                endTime: eTime,
                 time: `${sTime} - ${eTime} น.`,
                 participants: item.participants,
                 responsible: item.responsible,
@@ -344,19 +348,34 @@ function updateMonthlyTable(data, currentDate) {
     filtered.forEach(item => {
         let parts = item.date.split('-');
         let formattedDate = `${parts[2]}/${parts[1]}/${Number(parts[0]) + 543}`;
-        let timeStr = `${item.startTime} - ${item.endTime} น.`;
+        let sTime = item.startTime ? String(item.startTime).trim().substring(0, 5) : "00:00";
+        let eTime = item.endTime ? String(item.endTime).trim().substring(0, 5) : "23:59";
+        let timeStr = `${sTime} - ${eTime} น.`;
 
         let tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition cursor-pointer group";
-        tr.onclick = function() { showModal(item); };
+        tr.onclick = function() { 
+            showModal({
+                rowId: item.rowId || item.id,
+                activityName: item.activityName,
+                department: item.department,
+                date: item.date,
+                startTime: sTime,
+                endTime: eTime,
+                time: timeStr,
+                participants: item.participants,
+                responsible: item.responsible,
+                supports: item.supports || "-"
+            }); 
+        };
         
         tr.innerHTML = `
-            <td class="p-3.5 font-medium text-navy-900 whitespace-nowrap">${formattedDate}</td>
-            <td class="p-3.5 text-slate-500 text-xs whitespace-nowrap">${timeStr}</td>
-            <td class="p-3.5 font-semibold text-navy-900 group-hover:text-brandOrange-500 transition">${item.activityName}</td>
-            <td class="p-3.5 text-slate-600">${item.department || '-'}</td>
-            <td class="p-3.5 text-slate-700 font-medium">${item.responsible || '-'}</td>
-            <td class="p-3.5 text-slate-500 text-xs">${item.supports || '-'}</td>
+            <td class="p-2.5 md:p-3 font-medium text-navy-900 whitespace-nowrap">${formattedDate}</td>
+            <td class="p-2.5 md:p-3 text-slate-500 text-xs whitespace-nowrap">${timeStr}</td>
+            <td class="p-2.5 md:p-3 font-semibold text-navy-900 group-hover:text-brandOrange-500 transition">${item.activityName}</td>
+            <td class="p-2.5 md:p-3 text-slate-600">${item.department || '-'}</td>
+            <td class="p-2.5 md:p-3 text-slate-700 font-medium">${item.responsible || '-'}</td>
+            <td class="p-2.5 md:p-3 text-slate-500 text-xs">${item.supports || '-'}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -415,10 +434,13 @@ function calculateWorkload(data) {
 }
 
 function showModal(data) {
+    currentSelectedEvent = data;
     document.getElementById('modal-title').innerText = data.activityName || "รายละเอียดกิจกรรม";
     document.getElementById('modal-dept').innerText = data.department || "-";
     document.getElementById('modal-date').innerText = data.date || "-";
-    document.getElementById('modal-time').innerText = `${data.startTime || '00:00'} - ${data.endTime || '23:59'} น.`;
+    let sTime = data.startTime ? data.startTime.substring(0, 5) : "00:00";
+    let eTime = data.endTime ? data.endTime.substring(0, 5) : "23:59";
+    document.getElementById('modal-time').innerText = `${sTime} - ${eTime} น.`;
     document.getElementById('modal-participants').innerText = data.participants || "0";
     document.getElementById('modal-responsible').innerText = data.responsible || "-";
     document.getElementById('modal-supports').innerText = data.supports || "-";
@@ -427,6 +449,25 @@ function showModal(data) {
 
 function closeModal() {
     document.getElementById('eventModal').classList.add('hidden');
+}
+
+function openEditActivityModal() {
+    if (!currentSelectedEvent) return;
+    closeModal();
+    
+    document.getElementById('editActivityId').value = currentSelectedEvent.rowId || "";
+    document.getElementById('modal-form-title').innerText = "แก้ไขข้อมูลกิจกรรม";
+    
+    document.getElementById('activityName').value = currentSelectedEvent.activityName || "";
+    document.getElementById('department').value = currentSelectedEvent.department || "";
+    document.getElementById('date').value = currentSelectedEvent.date || "";
+    document.getElementById('startTime').value = currentSelectedEvent.startTime || "";
+    document.getElementById('endTime').value = currentSelectedEvent.endTime || "";
+    document.getElementById('participants').value = currentSelectedEvent.participants || "";
+
+    document.getElementById('activityModal').classList.remove('hidden');
+    loadUsersToDropdown();
+    loadSupportsToDropdown();
 }
 
 function showSuccessModal() {
@@ -445,6 +486,7 @@ async function submitActivityForm(e) {
     btn.innerText = "กำลังบันทึก...";
     btn.disabled = true;
 
+    let editId = document.getElementById('editActivityId').value;
     let startTime = document.getElementById('startTime').value;
     let endTime = document.getElementById('endTime').value;
 
@@ -463,6 +505,8 @@ async function submitActivityForm(e) {
     let combinedSupports = supportArray.join(', ');
 
     let payload = {
+        type: editId ? "editActivity" : "addActivity",
+        rowId: editId,
         activityName: document.getElementById('activityName').value,
         department: document.getElementById('department').value,
         date: document.getElementById('date').value,
