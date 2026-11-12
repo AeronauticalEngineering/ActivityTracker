@@ -99,7 +99,7 @@
             background-color: #fff7ed;
         }
 
-        /* ตกแต่งแถบกิจกรรมในช่องปฏิทินให้เป็นสีส้มโดดเด่น อ่านง่าย */
+        /* ตกแต่งแถบกิจกรรมในช่องปฏิทินแบบตารางเดือน */
         .fc-event {
             background-color: #f97316 !important;
             border-color: #ea580c !important;
@@ -114,6 +114,20 @@
         }
         .fc-event-title {
             font-size: 0.8rem !important;
+        }
+
+        /* ปรับแต่งตัวหนังสือในมุมมองกำหนดการทั้งเดือน (List View) ให้ชัดเจน ไม่อ่านไม่ออก */
+        .fc-list-event-title a {
+            color: #0f172a !important;
+            font-weight: 600 !important;
+            font-size: 0.95rem !important;
+        }
+        .fc-list-event-title a:hover {
+            color: #f97316 !important;
+        }
+        .fc-list-event:hover td {
+            background-color: #fff7ed !important;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -471,13 +485,12 @@
         </div>
     </div>
 
-    <!-- Modal: Loading Animation ขณะโหลดหรือบันทึกข้อมูล -->
+    <!-- Modal: Loading Animation (แสดงเฉพาะ "กรุณารอสักครู่") -->
     <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden flex flex-col items-center justify-center z-50 transition-all">
         <div class="bg-white p-6 rounded-2xl shadow-2xl flex items-center space-x-4 border border-slate-100">
             <div class="w-10 h-10 border-4 border-brandOrange-500 border-t-transparent rounded-full animate-spin"></div>
             <div>
-                <h4 id="loading-text" class="font-bold text-navy-900 text-base">กำลังประมวลผล...</h4>
-                <p class="text-xs text-slate-400">กรุณารอสักครู่ ระบบกำลังซิงค์ข้อมูลกับ Google Sheets</p>
+                <h4 id="loading-text" class="font-bold text-navy-900 text-base">กรุณารอสักครู่...</h4>
             </div>
         </div>
     </div>
