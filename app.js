@@ -4,6 +4,7 @@ let allEvents = [];
 let globalUsersList = [];
 let globalSupportsList = [];
 let currentSelectedEvent = null;
+let personActivitiesMap = {};
 
 document.addEventListener('DOMContentLoaded', function() {
     initCalendar();
@@ -439,6 +440,7 @@ function updateMonthlyTable(data, currentDate) {
 
 function calculateWorkload(data) {
     let workloadMap = {};
+    personActivitiesMap = {};
     let totalActivityHoursSum = 0;
     let totalActivities = data.length;
 
@@ -451,6 +453,17 @@ function calculateWorkload(data) {
         responsibles.forEach(person => {
             if (person) {
                 workloadMap[person] = (workloadMap[person] || 0) + durationHours;
+                
+                if (!personActivitiesMap[person]) {
+                    personActivitiesMap[person] = [];
+                }
+                personActivitiesMap[person].push({
+                    activityName: item.activityName || "ไม่มีชื่อกิจกรรม",
+                    date: item.date || "-",
+                    startTime: item.startTime ? String(item.startTime).trim().substring(0, 5) : "00:00",
+                    endTime: item.endTime ? String(item.endTime).trim().substring(0, 5) : "23:59",
+                    hours: durationHours
+                });
             }
         });
     });
@@ -469,24 +482,75 @@ function calculateWorkload(data) {
     }
 
     for (let [person, hours] of Object.entries(workloadMap)) {
-        container.innerHTML += `
-            <div class="p-5 bg-slate-50/70 border border-slate-200/80 rounded-2xl flex justify-between items-center hover:border-navy-900/30 transition">
-                <div class="flex items-center space-x-3.5">
-                    <div class="w-11 h-11 rounded-xl bg-navy-900 text-white flex items-center justify-center font-bold text-base">
-                        ${person.charAt(0)}
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-navy-900 text-sm">${person}</h4>
-                        <p class="text-xs text-slate-400">ผู้รับผิดชอบกิจกรรม</p>
-                    </div>
+        let card = document.createElement('div');
+        card.className = "p-5 bg-slate-50/70 border border-slate-200/80 rounded-2xl flex justify-between items-center hover:border-brandOrange-500 hover:bg-brandOrange-50/30 transition cursor-pointer group";
+        card.onclick = function() {
+            openPersonWorkloadModal(person, hours);
+        };
+
+        card.innerHTML = `
+            <div class="flex items-center space-x-3.5 min-w-0">
+                <div class="w-11 h-11 rounded-xl bg-navy-900 group-hover:bg-brandOrange-500 text-white flex items-center justify-center font-bold text-base transition shrink-0">
+                    ${person.charAt(0)}
                 </div>
-                <div class="text-right">
-                    <span class="text-xl font-extrabold text-brandOrange-500">${hours.toFixed(1)}</span>
-                    <span class="text-[11px] text-slate-400 block font-medium">ชั่วโมงสะสม</span>
+                <div class="truncate">
+                    <h4 class="font-bold text-navy-900 text-sm truncate group-hover:text-brandOrange-600 transition">${person}</h4>
+                    <p class="text-xs text-slate-400">คลิกเพื่อดูรายการกิจกรรม</p>
                 </div>
             </div>
+            <div class="text-right shrink-0 ml-2">
+                <span class="text-xl font-extrabold text-brandOrange-500">${hours.toFixed(1)}</span>
+                <span class="text-[11px] text-slate-400 block font-medium">ชั่วโมงสะสม</span>
+            </div>
         `;
+        container.appendChild(card);
     }
+}
+
+function openPersonWorkloadModal(person, totalHours) {
+    document.getElementById('pw-modal-name').innerText = person;
+    document.getElementById('pw-modal-total-hours').innerText = totalHours.toFixed(1);
+    
+    let listContainer = document.getElementById('pw-modal-list');
+    listContainer.innerHTML = '';
+
+    let activities = personActivitiesMap[person] || [];
+    activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (activities.length === 0) {
+        listContainer.innerHTML = `<p class="text-center text-slate-400 text-sm py-6">ไม่พบรายการกิจกรรม</p>`;
+    } else {
+        activities.forEach(act => {
+            let formattedDate = act.date;
+            if (act.date && act.date.includes('-')) {
+                let parts = act.date.split('-');
+                formattedDate = `${parts[2]}/${parts[1]}/${Number(parts[0]) + 543}`;
+            }
+
+            listContainer.innerHTML += `
+                <div class="p-3.5 bg-white border border-slate-200/80 rounded-xl flex justify-between items-center gap-3 shadow-2xs">
+                    <div class="min-w-0 space-y-1">
+                        <h5 class="font-bold text-navy-900 text-sm leading-snug">${act.activityName}</h5>
+                        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                            <span><i class="fa-regular fa-calendar mr-1 text-slate-400"></i>${formattedDate}</span>
+                            <span>•</span>
+                            <span><i class="fa-regular fa-clock mr-1 text-slate-400"></i>${act.startTime} - ${act.endTime} น.</span>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0 bg-brandOrange-50 border border-brandOrange-100 px-3 py-1.5 rounded-lg">
+                        <span class="font-extrabold text-brandOrange-600 text-sm">${act.hours.toFixed(1)}</span>
+                        <span class="text-[10px] text-brandOrange-600 block font-medium">ชม.</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    document.getElementById('personWorkloadModal').classList.remove('hidden');
+}
+
+function closePersonWorkloadModal() {
+    document.getElementById('personWorkloadModal').classList.add('hidden');
 }
 
 function showModal(data) {
