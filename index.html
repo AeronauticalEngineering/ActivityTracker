@@ -471,6 +471,17 @@
         </div>
     </div>
 
+    <!-- Modal: Loading Animation ขณะโหลดหรือบันทึกข้อมูล -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden flex flex-col items-center justify-center z-50 transition-all">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl flex items-center space-x-4 border border-slate-100">
+            <div class="w-10 h-10 border-4 border-brandOrange-500 border-t-transparent rounded-full animate-spin"></div>
+            <div>
+                <h4 id="loading-text" class="font-bold text-navy-900 text-base">กำลังประมวลผล...</h4>
+                <p class="text-xs text-slate-400">กรุณารอสักครู่ ระบบกำลังซิงค์ข้อมูลกับ Google Sheets</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Script ควบคุมการทำงาน -->
     <script src="app.js"></script>
     <script>
