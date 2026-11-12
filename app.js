@@ -366,11 +366,13 @@ function updateMonthlyTable(data, currentDate) {
 
 function calculateWorkload(data) {
     let workloadMap = {};
-    let totalHoursSum = 0;
+    let totalActivityHoursSum = 0; // ชั่วโมงรวมของกิจกรรมทั้งหมดในระบบ
     let totalActivities = data.length;
 
     data.forEach(item => {
         let durationHours = Number(item.workHours) || 0;
+        totalActivityHoursSum += durationHours; // รวม workHours ของทุกกิจกรรมตรงๆ
+
         let responsibles = String(item.responsible || '').split(',').map(r => r.trim());
         
         responsibles.forEach(person => {
@@ -380,14 +382,9 @@ function calculateWorkload(data) {
         });
     });
 
-    // คำนวณชั่วโมงรวมทั้งหมด
-    for (let hours of Object.values(workloadMap)) {
-        totalHoursSum += hours;
-    }
-
-    // อัปเดตตัวเลข Summary Cards ด้านบน
+    // อัปเดตตัวเลขการ์ดสรุปด้านบน
     document.getElementById('stat-total-activities').innerText = totalActivities;
-    document.getElementById('stat-total-hours').innerText = totalHoursSum.toFixed(1);
+    document.getElementById('stat-total-hours').innerText = totalActivityHoursSum.toFixed(1);
     document.getElementById('stat-total-persons').innerText = Object.keys(workloadMap).length;
 
     let container = document.getElementById('workload-summary');
