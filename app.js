@@ -230,19 +230,24 @@ function initCalendar() {
     if (!calendarEl) return;
     
     calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
+        initialView: 'dayGridMonth', // หน้าแรกเปิดมาแบบตารางเดือนปกติ (หรือเปลี่ยนเป็น listMonth หากต้องการเปิดมาเป็นรายการ)
         locale: 'th',
-        displayEventTime: false, // ปิดการแสดงเวลาบนปฏิทิน เหลือแต่ชื่อกิจกรรม
+        displayEventTime: false, // ซ่อนเวลาบนปฏิทินช่องปกติ เหลือแต่ชื่อกิจกรรม
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek,listWeek'
+            right: 'dayGridMonth,timeGridWeek,listMonth' // ใช้ listMonth ซึ่งเป็นมุมมองรายการทั้งเดือนโดยปริยายของ FullCalendar
         },
         buttonText: {
             today: 'วันนี้',
-            month: 'เดือน',
+            month: 'ตารางเดือน',
             week: 'สัปดาห์',
-            list: 'กำหนดการ'
+            list: 'กำหนดการทั้งเดือน' // เปลี่ยนชื่อปุ่มให้สื่อความหมายชัดเจน
+        },
+        views: {
+            listMonth: {
+                buttonText: 'กำหนดการทั้งเดือน'
+            }
         },
         datesSet: function(info) {
             updateMonthlyTable(allEvents, info.view.currentStart);
