@@ -12,36 +12,33 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function switchTab(tab) {
-    document.getElementById('tab-dashboard').classList.add('hidden');
-    document.getElementById('tab-workload').classList.add('hidden');
-    document.getElementById('tab-form').classList.add('hidden');
-    document.getElementById('tab-support').classList.add('hidden');
-    
-    document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
-    document.getElementById('btn-workload').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
-    document.getElementById('btn-form').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
-    document.getElementById('btn-support').className = 'w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium';
+    const tabs = ['dashboard', 'workload', 'form', 'support'];
+    tabs.forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`btn-${t}`);
+        btn.className = 'w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-navy-900 transition flex items-center space-x-3 text-sm font-medium';
+        const icon = btn.querySelector('i');
+        if (icon) icon.classList.remove('text-brandOrange-500');
+    });
+
+    document.getElementById(`tab-${tab}`).classList.remove('hidden');
+    const activeBtn = document.getElementById(`btn-${tab}`);
+    activeBtn.className = 'w-full text-left px-4 py-3 rounded-xl bg-navy-900 text-white transition flex items-center space-x-3 text-sm font-medium';
+    const activeIcon = activeBtn.querySelector('i');
+    if (activeIcon) activeIcon.classList.add('text-brandOrange-500');
 
     if (tab === 'dashboard') {
-        document.getElementById('tab-dashboard').classList.remove('hidden');
-        document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-3 rounded-xl bg-blue-800 transition flex items-center space-x-3 shadow-inner text-sm font-medium';
         document.getElementById('page-title').innerText = 'Dashboard กิจกรรม';
         if (calendar) {
             calendar.updateSize();
             calendar.render();
         }
     } else if (tab === 'workload') {
-        document.getElementById('tab-workload').classList.remove('hidden');
-        document.getElementById('btn-workload').className = 'w-full text-left px-4 py-3 rounded-xl bg-blue-800 transition flex items-center space-x-3 shadow-inner text-sm font-medium';
         document.getElementById('page-title').innerText = 'รายงานภาระงาน (ชั่วโมงสะสม)';
         calculateWorkload(allEvents);
     } else if (tab === 'form') {
-        document.getElementById('tab-form').classList.remove('hidden');
-        document.getElementById('btn-form').className = 'w-full text-left px-4 py-3 rounded-xl bg-blue-800 transition flex items-center space-x-3 shadow-inner text-sm font-medium';
         document.getElementById('page-title').innerText = 'บันทึกผู้รับผิดชอบใหม่';
     } else if (tab === 'support') {
-        document.getElementById('tab-support').classList.remove('hidden');
-        document.getElementById('btn-support').className = 'w-full text-left px-4 py-3 rounded-xl bg-blue-800 transition flex items-center space-x-3 shadow-inner text-sm font-medium';
         document.getElementById('page-title').innerText = 'บันทึกสิ่งสนับสนุนใหม่';
     }
 
@@ -107,7 +104,7 @@ function addResponsibleField() {
     
     let select = document.createElement('select');
     select.name = "responsible";
-    select.className = "responsible-select w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none bg-white text-sm";
+    select.className = "responsible-select w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none bg-white text-sm";
     select.required = true;
     
     select.innerHTML = '<option value="">-- เลือกผู้รับผิดชอบ --</option>';
@@ -120,7 +117,7 @@ function addResponsibleField() {
     
     let removeBtn = document.createElement('button');
     removeBtn.type = "button";
-    removeBtn.className = "px-3 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition text-sm";
+    removeBtn.className = "px-3 py-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-red-50 hover:text-red-600 transition text-sm";
     removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
     removeBtn.onclick = function() {
         if (container.children.length > 1) {
@@ -142,7 +139,7 @@ function addSupportField() {
     
     let select = document.createElement('select');
     select.name = "support";
-    select.className = "support-select w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none bg-white text-sm";
+    select.className = "support-select w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none bg-white text-sm";
     
     select.innerHTML = '<option value="">-- เลือกสิ่งสนับสนุน --</option>';
     globalSupportsList.forEach(name => {
@@ -154,7 +151,7 @@ function addSupportField() {
     
     let removeBtn = document.createElement('button');
     removeBtn.type = "button";
-    removeBtn.className = "px-3 py-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition text-sm";
+    removeBtn.className = "px-3 py-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-red-50 hover:text-red-600 transition text-sm";
     removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
     removeBtn.onclick = function() {
         container.removeChild(div);
@@ -300,8 +297,9 @@ function updateCalendarEvents(data) {
             title: item.activityName || "ไม่มีชื่อกิจกรรม",
             start: `${cleanDate}T${sTime}`,
             end: `${endDate}T${eTime}`,
-            backgroundColor: '#1d4ed8',
-            borderColor: '#1e40af',
+            backgroundColor: '#0f172a',
+            borderColor: '#0f172a',
+            textColor: '#ffffff',
             extendedProps: {
                 activityName: item.activityName,
                 department: item.department,
@@ -339,7 +337,7 @@ function updateMonthlyTable(data, currentDate) {
     tbody.innerHTML = '';
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-400">ยังไม่มีข้อมูลกิจกรรมในเดือนนี้</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">ยังไม่มีข้อมูลกิจกรรมในเดือนนี้</td></tr>`;
         return;
     }
 
@@ -349,16 +347,16 @@ function updateMonthlyTable(data, currentDate) {
         let timeStr = `${item.startTime} - ${item.endTime} น.`;
 
         let tr = document.createElement('tr');
-        tr.className = "hover:bg-blue-50/60 transition cursor-pointer";
+        tr.className = "hover:bg-slate-50 transition cursor-pointer group";
         tr.onclick = function() { showModal(item); };
         
         tr.innerHTML = `
-            <td class="p-3 font-medium text-gray-800">${formattedDate}</td>
-            <td class="p-3 text-gray-600 text-xs">${timeStr}</td>
-            <td class="p-3 font-semibold text-primary">${item.activityName}</td>
-            <td class="p-3 text-gray-600">${item.department || '-'}</td>
-            <td class="p-3 text-gray-700 font-medium">${item.responsible || '-'}</td>
-            <td class="p-3 text-gray-600 text-xs">${item.supports || '-'}</td>
+            <td class="p-3.5 font-medium text-navy-900 whitespace-nowrap">${formattedDate}</td>
+            <td class="p-3.5 text-slate-500 text-xs whitespace-nowrap">${timeStr}</td>
+            <td class="p-3.5 font-semibold text-navy-900 group-hover:text-brandOrange-500 transition">${item.activityName}</td>
+            <td class="p-3.5 text-slate-600">${item.department || '-'}</td>
+            <td class="p-3.5 text-slate-700 font-medium">${item.responsible || '-'}</td>
+            <td class="p-3.5 text-slate-500 text-xs">${item.supports || '-'}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -366,12 +364,12 @@ function updateMonthlyTable(data, currentDate) {
 
 function calculateWorkload(data) {
     let workloadMap = {};
-    let totalActivityHoursSum = 0; // ชั่วโมงรวมของกิจกรรมทั้งหมดในระบบ
+    let totalActivityHoursSum = 0;
     let totalActivities = data.length;
 
     data.forEach(item => {
         let durationHours = Number(item.workHours) || 0;
-        totalActivityHoursSum += durationHours; // รวม workHours ของทุกกิจกรรมตรงๆ
+        totalActivityHoursSum += durationHours;
 
         let responsibles = String(item.responsible || '').split(',').map(r => r.trim());
         
@@ -382,7 +380,6 @@ function calculateWorkload(data) {
         });
     });
 
-    // อัปเดตตัวเลขการ์ดสรุปด้านบน
     document.getElementById('stat-total-activities').innerText = totalActivities;
     document.getElementById('stat-total-hours').innerText = totalActivityHoursSum.toFixed(1);
     document.getElementById('stat-total-persons').innerText = Object.keys(workloadMap).length;
@@ -392,25 +389,25 @@ function calculateWorkload(data) {
     container.innerHTML = '';
 
     if (Object.keys(workloadMap).length === 0) {
-        container.innerHTML = '<p class="text-gray-500 text-sm col-span-full py-8 text-center">ยังไม่มีข้อมูลภาระงานในระบบ</p>';
+        container.innerHTML = '<p class="text-slate-400 text-sm col-span-full py-8 text-center">ยังไม่มีข้อมูลภาระงานในระบบ</p>';
         return;
     }
 
     for (let [person, hours] of Object.entries(workloadMap)) {
         container.innerHTML += `
-            <div class="p-5 bg-white border border-gray-100 rounded-2xl flex justify-between items-center shadow-sm hover:shadow-md transition">
-                <div class="flex items-center space-x-3">
-                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-primary flex items-center justify-center font-bold text-lg">
+            <div class="p-5 bg-slate-50/70 border border-slate-200/80 rounded-2xl flex justify-between items-center hover:border-navy-900/30 transition">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-11 h-11 rounded-xl bg-navy-900 text-white flex items-center justify-center font-bold text-base">
                         ${person.charAt(0)}
                     </div>
                     <div>
-                        <h4 class="font-bold text-gray-800 text-base">${person}</h4>
-                        <p class="text-xs text-gray-400">ผู้รับผิดชอบกิจกรรม</p>
+                        <h4 class="font-bold text-navy-900 text-sm">${person}</h4>
+                        <p class="text-xs text-slate-400">ผู้รับผิดชอบกิจกรรม</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <span class="text-xl font-extrabold text-primary">${hours.toFixed(1)}</span>
-                    <span class="text-xs text-gray-500 block font-medium">ชั่วโมงสะสม</span>
+                    <span class="text-xl font-extrabold text-brandOrange-500">${hours.toFixed(1)}</span>
+                    <span class="text-[11px] text-slate-400 block font-medium">ชั่วโมงสะสม</span>
                 </div>
             </div>
         `;
@@ -450,16 +447,6 @@ async function submitActivityForm(e) {
 
     let startTime = document.getElementById('startTime').value;
     let endTime = document.getElementById('endTime').value;
-    
-    let startArr = (startTime || "00:00").split(':');
-    let endArr = (endTime || "00:00").split(':');
-    let startMins = Number(startArr[0]) * 60 + Number(startArr[1]);
-    let endMins = Number(endArr[0]) * 60 + Number(endArr[1]);
-    
-    if (endMins < startMins) {
-        endMins += 24 * 60;
-    }
-    let calcHours = Math.max(0, (endMins - startMins) / 60);
 
     let responsibleSelects = document.querySelectorAll('.responsible-select');
     let responsibleArray = [];
