@@ -11,8 +11,17 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#1d4ed8',
-                        secondary: '#3b82f6'
+                        navy: {
+                            800: '#1e3a8a',
+                            900: '#0f172a',
+                            950: '#090d16'
+                        },
+                        brandOrange: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            500: '#f97316',
+                            600: '#ea580c'
+                        }
                     }
                 }
             }
@@ -26,84 +35,132 @@
     <!-- Google Font (Sarabun) -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Sarabun', sans-serif; }
+        body { font-family: 'Sarabun', sans-serif; color: #0f172a; }
+        /* ปรับแต่ง FullCalendar ให้เข้ากับธีม Minimal ขาว-น้ำเงินเข้ม-ส้ม */
+        .fc .fc-button-primary {
+            background-color: #0f172a;
+            border-color: #0f172a;
+            font-weight: 500;
+            border-radius: 0.75rem;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.875rem;
+        }
+        .fc .fc-button-primary:hover {
+            background-color: #1e3a8a;
+            border-color: #1e3a8a;
+        }
+        .fc .fc-button-primary:not(:disabled).fc-button-active,
+        .fc .fc-button-primary:not(:disabled):active {
+            background-color: #f97316;
+            border-color: #f97316;
+        }
+        .fc .fc-toolbar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .fc-theme-standard td, .fc-theme-standard th {
+            border-color: #f1f5f9;
+        }
+        .fc .fc-daygrid-day.fc-day-today {
+            background-color: #fff7ed;
+        }
+        .fc-event {
+            border-radius: 6px;
+            padding: 2px 6px;
+            font-size: 0.8rem;
+            border: none;
+        }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col md:flex-row relative">
+<body class="bg-slate-50 min-h-screen flex flex-col md:flex-row relative antialiased">
 
     <!-- Mobile Overlay -->
-    <div id="sidebar-overlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+    <div id="sidebar-overlay" onclick="toggleMobileMenu()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-30 hidden md:hidden"></div>
 
-    <!-- Sidebar / Navigation -->
-    <aside id="sidebar" class="bg-blue-900 text-white w-64 fixed md:sticky top-0 h-screen flex-shrink-0 p-6 space-y-6 z-45 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-xl">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-white text-primary rounded-xl flex items-center justify-center font-bold text-xl shadow">A</div>
-                <div>
-                    <h2 class="font-bold text-base leading-tight">Activity Tracker</h2>
-                    <span class="text-xs text-blue-300">ระบบติดตามภาระงาน</span>
+    <!-- Sidebar / Navigation (Minimal White with Navy & Orange Accents) -->
+    <aside id="sidebar" class="bg-white border-r border-slate-200/80 text-navy-900 w-64 fixed md:sticky top-0 h-screen flex-shrink-0 p-6 flex flex-col justify-between z-45 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+        <div class="space-y-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-navy-900 text-white rounded-xl flex items-center justify-center font-bold text-xl relative">
+                        A
+                        <span class="w-2.5 h-2.5 bg-brandOrange-500 rounded-full absolute -top-0.5 -right-0.5 border-2 border-white"></span>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-base tracking-tight text-navy-900 leading-tight">Activity Tracker</h2>
+                        <span class="text-xs text-slate-400">ระบบติดตามภาระงาน</span>
+                    </div>
                 </div>
+                <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-navy-900 p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
-            <button onclick="toggleMobileMenu()" class="md:hidden text-white p-1">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
+
+            <nav class="space-y-1.5">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full text-left px-4 py-3 rounded-xl bg-navy-900 text-white transition flex items-center space-x-3 text-sm font-medium">
+                    <i class="fa-solid fa-chart-pie w-5 text-brandOrange-500"></i>
+                    <span>Dashboard กิจกรรม</span>
+                </button>
+                <button onclick="switchTab('workload')" id="btn-workload" class="w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-navy-900 transition flex items-center space-x-3 text-sm font-medium">
+                    <i class="fa-solid fa-clock-rotate-left w-5"></i>
+                    <span>ภาระงาน (ชั่วโมงสะสม)</span>
+                </button>
+                <button onclick="switchTab('form')" id="btn-form" class="w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-navy-900 transition flex items-center space-x-3 text-sm font-medium">
+                    <i class="fa-solid fa-user-plus w-5"></i>
+                    <span>บันทึกผู้รับผิดชอบใหม่</span>
+                </button>
+                <button onclick="switchTab('support')" id="btn-support" class="w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 hover:text-navy-900 transition flex items-center space-x-3 text-sm font-medium">
+                    <i class="fa-solid fa-hand-holding-hand w-5"></i>
+                    <span>บันทึกสิ่งสนับสนุนใหม่</span>
+                </button>
+            </nav>
         </div>
-        <nav class="space-y-2">
-            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="w-full text-left px-4 py-3 rounded-xl bg-blue-800 transition flex items-center space-x-3 shadow-inner text-sm font-medium">
-                <i class="fa-solid fa-chart-pie w-5"></i>
-                <span>Dashboard กิจกรรม</span>
-            </button>
-            <button onclick="switchTab('workload')" id="btn-workload" class="w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium">
-                <i class="fa-solid fa-clock-rotate-left w-5"></i>
-                <span>ภาระงาน (ชั่วโมงสะสม)</span>
-            </button>
-            <button onclick="switchTab('form')" id="btn-form" class="w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium">
-                <i class="fa-solid fa-user-plus w-5"></i>
-                <span>บันทึกผู้รับผิดชอบใหม่</span>
-            </button>
-            <button onclick="switchTab('support')" id="btn-support" class="w-full text-left px-4 py-3 rounded-xl hover:bg-blue-800 transition flex items-center space-x-3 text-sm font-medium">
-                <i class="fa-solid fa-hand-holding-hand w-5"></i>
-                <span>บันทึกสิ่งสนับสนุนใหม่</span>
-            </button>
-        </nav>
+
+        <div class="pt-4 border-t border-slate-100">
+            <div class="flex items-center space-x-2 text-xs text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-brandOrange-500"></span>
+                <span>Minimal Edition v2.0</span>
+            </div>
+        </div>
     </aside>
 
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
         <!-- Top Navbar -->
-        <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 z-20">
+        <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/80 h-16 flex items-center justify-between px-6 z-20 sticky top-0">
             <div class="flex items-center space-x-3">
-                <button onclick="toggleMobileMenu()" class="md:hidden text-gray-600 p-2 focus:outline-none">
+                <button onclick="toggleMobileMenu()" class="md:hidden text-navy-900 p-2 focus:outline-none">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
-                <h1 id="page-title" class="text-lg md:text-xl font-bold text-gray-800 truncate">Dashboard กิจกรรม</h1>
+                <h1 id="page-title" class="text-lg md:text-xl font-bold text-navy-900 truncate">Dashboard กิจกรรม</h1>
             </div>
             
             <div class="flex items-center space-x-3">
-                <button onclick="openAddActivityModal()" class="bg-primary hover:bg-blue-800 text-white px-3 md:px-4 py-2 rounded-xl text-xs md:text-sm font-medium transition shadow-sm flex items-center space-x-2">
+                <button onclick="openAddActivityModal()" class="bg-brandOrange-500 hover:bg-brandOrange-600 text-white px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition shadow-xs flex items-center space-x-2">
                     <i class="fa-solid fa-plus"></i>
                     <span>เพิ่มกิจกรรม</span>
                 </button>
-                <span class="text-xs md:text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full shadow-sm hidden sm:inline-block">ระบบภายในองค์กร</span>
+                <span class="text-xs text-navy-800 bg-slate-100 px-3 py-1.5 rounded-full font-medium hidden sm:inline-block">ระบบภายในองค์กร</span>
             </div>
         </header>
 
         <!-- Main Body -->
-        <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 max-w-7xl mx-auto w-full">
             
             <!-- TAB 1: Dashboard & Calendar -->
             <section id="tab-dashboard" class="space-y-6">
-                <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-200">
+                <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200/80">
                     <div id="calendar" class="w-full"></div>
                 </div>
 
-                <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-200 space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div class="bg-white p-5 md:p-6 rounded-2xl border border-slate-200/80 space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-slate-100">
                         <div>
-                            <h3 class="text-lg font-bold text-gray-800">รายการกิจกรรมประจำเดือน</h3>
-                            <p class="text-xs text-gray-500">คลิกที่แถวรายการกิจกรรมเพื่อดูรายละเอียดเชิงลึก</p>
+                            <h3 class="text-lg font-bold text-navy-900">รายการกิจกรรมประจำเดือน</h3>
+                            <p class="text-xs text-slate-400">คลิกที่แถวรายการเพื่อดูรายละเอียดเพิ่มเติม</p>
                         </div>
-                        <div class="text-sm font-medium text-primary bg-blue-50 px-3 py-1.5 rounded-xl" id="current-month-label">
+                        <div class="text-xs font-semibold text-brandOrange-600 bg-brandOrange-50 border border-brandOrange-100 px-3.5 py-1.5 rounded-full" id="current-month-label">
                             ประจำเดือน
                         </div>
                     </div>
@@ -111,18 +168,18 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
-                                <tr class="border-b text-gray-600 bg-gray-50/70">
-                                    <th class="p-3 font-semibold rounded-l-xl">วันที่</th>
-                                    <th class="p-3 font-semibold">เวลา</th>
-                                    <th class="p-3 font-semibold">ชื่อกิจกรรม</th>
-                                    <th class="p-3 font-semibold">ฝ่าย / หน่วยงาน</th>
-                                    <th class="p-3 font-semibold">ผู้รับผิดชอบ</th>
-                                    <th class="p-3 font-semibold rounded-r-xl">สิ่งสนับสนุน</th>
+                                <tr class="border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider">
+                                    <th class="p-3.5 font-semibold">วันที่</th>
+                                    <th class="p-3.5 font-semibold">เวลา</th>
+                                    <th class="p-3.5 font-semibold">ชื่อกิจกรรม</th>
+                                    <th class="p-3.5 font-semibold">ฝ่าย / หน่วยงาน</th>
+                                    <th class="p-3.5 font-semibold">ผู้รับผิดชอบ</th>
+                                    <th class="p-3.5 font-semibold">สิ่งสนับสนุน</th>
                                 </tr>
                             </thead>
-                            <tbody id="monthly-activity-table" class="divide-y text-gray-700">
+                            <tbody id="monthly-activity-table" class="divide-y divide-slate-100 text-slate-700">
                                 <tr>
-                                    <td colspan="6" class="p-6 text-center text-gray-400">กำลังโหลดข้อมูลรายการกิจกรรม...</td>
+                                    <td colspan="6" class="p-8 text-center text-slate-400">กำลังโหลดข้อมูลรายการกิจกรรม...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -130,85 +187,85 @@
                 </div>
             </section>
 
-            <!-- TAB 2: Workload Dashboard (ปรับปรุงใหม่ตามต้องการ) -->
-            <section id="tab-workload" class="hidden space-y-6 max-w-6xl mx-auto w-full">
+            <!-- TAB 2: Workload Dashboard -->
+            <section id="tab-workload" class="hidden space-y-6">
                 <!-- Summary Dashboard Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center space-x-4">
-                        <div class="w-14 h-14 bg-blue-50 text-primary rounded-2xl flex items-center justify-center text-2xl font-bold shadow-inner">
-                            <i class="fa-solid fa-calendar-check"></i>
-                        </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 flex items-center justify-between">
                         <div>
-                            <span class="text-xs text-gray-400 font-medium block">จำนวนกิจกรรมทั้งหมด</span>
-                            <h3 id="stat-total-activities" class="text-2xl font-extrabold text-gray-800">0</h3>
+                            <span class="text-xs text-slate-400 font-medium block mb-1">จำนวนกิจกรรมทั้งหมด</span>
+                            <h3 id="stat-total-activities" class="text-3xl font-extrabold text-navy-900">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-slate-100 text-navy-900 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fa-regular fa-calendar-check"></i>
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center space-x-4">
-                        <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-inner">
-                            <i class="fa-solid fa-clock"></i>
-                        </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 flex items-center justify-between">
                         <div>
-                            <span class="text-xs text-gray-400 font-medium block">ชั่วโมงสะสมรวมทั้งหมด</span>
-                            <h3 id="stat-total-hours" class="text-2xl font-extrabold text-gray-800">0</h3>
+                            <span class="text-xs text-slate-400 font-medium block mb-1">ชั่วโมงสะสมรวมทั้งหมด</span>
+                            <h3 id="stat-total-hours" class="text-3xl font-extrabold text-brandOrange-500">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-brandOrange-50 text-brandOrange-500 rounded-xl flex items-center justify-center text-xl">
+                            <i class="fa-regular fa-clock"></i>
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex items-center space-x-4">
-                        <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-inner">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-slate-400 font-medium block mb-1">บุคลากรที่มีภาระงาน</span>
+                            <h3 id="stat-total-persons" class="text-3xl font-extrabold text-navy-800">0</h3>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-50 text-navy-800 rounded-xl flex items-center justify-center text-xl">
                             <i class="fa-solid fa-user-group"></i>
-                        </div>
-                        <div>
-                            <span class="text-xs text-gray-400 font-medium block">บุคลากรที่มีภาระงาน</span>
-                            <h3 id="stat-total-persons" class="text-2xl font-extrabold text-gray-800">0</h3>
                         </div>
                     </div>
                 </div>
 
                 <!-- รายละเอียดภาระงานรายบุคคล -->
-                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200 space-y-6">
-                    <div class="border-b pb-4">
-                        <h3 class="text-xl font-bold text-gray-800">รายละเอียดภาระงาน (ชั่วโมงสะสม) รายบุคคล</h3>
-                        <p class="text-sm text-gray-500">สรุปผลรวมชั่วโมงการปฏิบัติงานแยกตามรายชื่อบุคลากรแต่ละท่าน</p>
+                <div class="bg-white p-6 md:p-8 rounded-2xl border border-slate-200/80 space-y-6">
+                    <div class="border-b border-slate-100 pb-4">
+                        <h3 class="text-lg font-bold text-navy-900">รายละเอียดภาระงาน (ชั่วโมงสะสม) รายบุคคล</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">สรุปผลรวมชั่วโมงการปฏิบัติงานแยกตามรายชื่อบุคลากรแต่ละท่าน</p>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="workload-summary">
-                        <p class="text-gray-500 text-sm col-span-full py-8 text-center">กำลังประมวลผลข้อมูลภาระงาน...</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="workload-summary">
+                        <p class="text-slate-400 text-sm col-span-full py-8 text-center">กำลังประมวลผลข้อมูลภาระงาน...</p>
                     </div>
                 </div>
             </section>
 
             <!-- TAB 3: Add User Form -->
-            <section id="tab-form" class="hidden space-y-6 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200 max-w-xl mx-auto">
-                <div class="border-b pb-3">
-                    <h4 class="text-lg font-bold text-gray-800">เพิ่มรายชื่อผู้รับผิดชอบใหม่ในระบบ</h4>
-                    <p class="text-xs text-gray-500">บันทึกชื่อบุคลากรใหม่เพื่อนำไปใช้เลือกในระบบฟอร์มกิจกรรม</p>
+            <section id="tab-form" class="hidden space-y-6 bg-white p-6 md:p-8 rounded-2xl border border-slate-200/80 max-w-xl mx-auto">
+                <div class="border-b border-slate-100 pb-4">
+                    <h4 class="text-lg font-bold text-navy-900">เพิ่มรายชื่อผู้รับผิดชอบใหม่</h4>
+                    <p class="text-xs text-slate-400 mt-0.5">บันทึกชื่อบุคลากรใหม่เพื่อนำไปใช้เลือกในฟอร์มบันทึกกิจกรรม</p>
                 </div>
-                <form id="userForm" onsubmit="submitUserForm(event)" class="space-y-4">
+                <form id="userForm" onsubmit="submitUserForm(event)" class="space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ - นามสกุล (ผู้รับผิดชอบ)</label>
-                        <input type="text" id="newDisplayName" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none text-sm" placeholder="เช่น ดร.นพล อาจฤทธิ์">
+                        <label class="block text-sm font-semibold text-navy-900 mb-1.5">ชื่อ - นามสกุล (ผู้รับผิดชอบ)</label>
+                        <input type="text" id="newDisplayName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:ring-2 focus:ring-navy-900/10 focus:outline-none text-sm transition" placeholder="เช่น ดร.นพล อาจฤทธิ์">
                     </div>
                     <div class="flex justify-end space-x-3 pt-2">
-                        <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border text-gray-600 hover:bg-gray-100 transition text-sm font-medium">ยกเลิก</button>
-                        <button type="submit" id="user-submit-btn" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow transition text-sm font-medium">บันทึกผู้รับผิดชอบ</button>
+                        <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition text-sm font-medium">ยกเลิก</button>
+                        <button type="submit" id="user-submit-btn" class="px-6 py-2.5 bg-navy-900 hover:bg-navy-800 text-white rounded-xl transition text-sm font-medium">บันทึกผู้รับผิดชอบ</button>
                     </div>
                 </form>
             </section>
 
             <!-- TAB 4: Add Support Form -->
-            <section id="tab-support" class="hidden space-y-6 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200 max-w-xl mx-auto">
-                <div class="border-b pb-3">
-                    <h4 class="text-lg font-bold text-gray-800">เพิ่มสิ่งสนับสนุนใหม่ในระบบ</h4>
-                    <p class="text-xs text-gray-500">บันทึกรายการสิ่งสนับสนุนหรืออุปกรณ์ใหม่เพื่อเลือกใช้ในกิจกรรม</p>
+            <section id="tab-support" class="hidden space-y-6 bg-white p-6 md:p-8 rounded-2xl border border-slate-200/80 max-w-xl mx-auto">
+                <div class="border-b border-slate-100 pb-4">
+                    <h4 class="text-lg font-bold text-navy-900">เพิ่มสิ่งสนับสนุนใหม่ในระบบ</h4>
+                    <p class="text-xs text-slate-400 mt-0.5">บันทึกรายการสิ่งสนับสนุนหรืออุปกรณ์ใหม่เพื่อเลือกใช้ในกิจกรรม</p>
                 </div>
-                <form id="supportForm" onsubmit="submitSupportForm(event)" class="space-y-4">
+                <form id="supportForm" onsubmit="submitSupportForm(event)" class="space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อสิ่งสนับสนุน / อุปกรณ์ / งบประมาณ</label>
-                        <input type="text" id="newSupportName" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none text-sm" placeholder="เช่น ห้องประชุมใหญ่, โพรเจกเตอร์, งบอาหารกลางวัน">
+                        <label class="block text-sm font-semibold text-navy-900 mb-1.5">ชื่อสิ่งสนับสนุน / อุปกรณ์ / งบประมาณ</label>
+                        <input type="text" id="newSupportName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:ring-2 focus:ring-navy-900/10 focus:outline-none text-sm transition" placeholder="เช่น ห้องประชุมใหญ่, โพรเจกเตอร์, งบอาหารกลางวัน">
                     </div>
                     <div class="flex justify-end space-x-3 pt-2">
-                        <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border text-gray-600 hover:bg-gray-100 transition text-sm font-medium">ยกเลิก</button>
-                        <button type="submit" id="support-submit-btn" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow transition text-sm font-medium">บันทึกสิ่งสนับสนุน</button>
+                        <button type="button" onclick="switchTab('dashboard')" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition text-sm font-medium">ยกเลิก</button>
+                        <button type="submit" id="support-submit-btn" class="px-6 py-2.5 bg-navy-900 hover:bg-navy-800 text-white rounded-xl transition text-sm font-medium">บันทึกสิ่งสนับสนุน</button>
                     </div>
                 </form>
             </section>
@@ -217,51 +274,51 @@
     </div>
 
     <!-- Modal: ฟอร์มเพิ่มกิจกรรม -->
-    <div id="activityModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 overflow-y-auto">
-        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 md:p-8 space-y-4 my-8">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="text-lg font-bold text-gray-800">ฟอร์มบันทึกข้อมูลกิจกรรม</h3>
-                <button onclick="closeAddActivityModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+    <div id="activityModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-50 overflow-y-auto">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-100 p-6 md:p-8 space-y-5 my-8">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-navy-900">บันทึกข้อมูลกิจกรรมใหม่</h3>
+                <button onclick="closeAddActivityModal()" class="text-slate-400 hover:text-navy-900 text-2xl leading-none">&times;</button>
             </div>
             <form id="activityForm" onsubmit="submitActivityForm(event)" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อกิจกรรม</label>
-                    <input type="text" id="activityName" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
+                    <label class="block text-xs font-semibold text-navy-900 mb-1">ชื่อกิจกรรม</label>
+                    <input type="text" id="activityName" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">หน่วยงาน / แผนก</label>
-                    <input type="text" id="department" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
+                    <label class="block text-xs font-semibold text-navy-900 mb-1">หน่วยงาน / แผนก</label>
+                    <input type="text" id="department" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">วันที่จัดกิจกรรม</label>
-                    <input type="date" id="date" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
+                    <label class="block text-xs font-semibold text-navy-900 mb-1">วันที่จัดกิจกรรม</label>
+                    <input type="date" id="date" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none text-sm">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">เวลาเริ่ม</label>
-                        <input type="time" id="startTime" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
+                        <label class="block text-xs font-semibold text-navy-900 mb-1">เวลาเริ่ม</label>
+                        <input type="time" id="startTime" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">เวลาสิ้นสุด</label>
-                        <input type="time" id="endTime" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
+                        <label class="block text-xs font-semibold text-navy-900 mb-1">เวลาสิ้นสุด</label>
+                        <input type="time" id="endTime" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none text-sm">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนผู้เข้าร่วม (คน)</label>
-                    <input type="number" id="participants" min="0" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none text-sm">
+                    <label class="block text-xs font-semibold text-navy-900 mb-1">จำนวนผู้เข้าร่วม (คน)</label>
+                    <input type="number" id="participants" min="0" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none text-sm">
                 </div>
                 
                 <!-- ผู้รับผิดชอบ -->
                 <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-sm font-medium text-gray-700">ผู้รับผิดชอบหลัก</label>
-                        <button type="button" onclick="addResponsibleField()" class="text-xs bg-blue-50 text-primary hover:bg-blue-100 px-2.5 py-1 rounded-lg font-medium transition flex items-center space-x-1">
-                            <i class="fa-solid fa-plus"></i> <span>เพิ่มผู้รับผิดชอบ</span>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-semibold text-navy-900">ผู้รับผิดชอบหลัก</label>
+                        <button type="button" onclick="addResponsibleField()" class="text-xs bg-slate-100 text-navy-900 hover:bg-slate-200 px-2.5 py-1 rounded-lg font-medium transition flex items-center space-x-1">
+                            <i class="fa-solid fa-plus text-brandOrange-500"></i> <span>เพิ่มผู้รับผิดชอบ</span>
                         </button>
                     </div>
                     <div id="responsible-container" class="space-y-2">
                         <div class="flex items-center space-x-2">
-                            <select name="responsible" class="responsible-select w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none bg-white text-sm" required>
+                            <select name="responsible" class="responsible-select w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none bg-white text-sm" required>
                                 <option value="">-- กำลังโหลดรายชื่อผู้รับผิดชอบ --</option>
                             </select>
                         </div>
@@ -270,96 +327,96 @@
 
                 <!-- สิ่งสนับสนุน -->
                 <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-sm font-medium text-gray-700">สิ่งสนับสนุน (ถ้ามี)</label>
-                        <button type="button" onclick="addSupportField()" class="text-xs bg-green-50 text-green-700 hover:bg-green-100 px-2.5 py-1 rounded-lg font-medium transition flex items-center space-x-1">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-semibold text-navy-900">สิ่งสนับสนุน (ถ้ามี)</label>
+                        <button type="button" onclick="addSupportField()" class="text-xs bg-brandOrange-50 text-brandOrange-600 hover:bg-brandOrange-100 px-2.5 py-1 rounded-lg font-medium transition flex items-center space-x-1">
                             <i class="fa-solid fa-plus"></i> <span>เพิ่มสิ่งสนับสนุน</span>
                         </button>
                     </div>
                     <div id="support-container" class="space-y-2">
                         <div class="flex items-center space-x-2">
-                            <select name="support" class="support-select w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-primary focus:outline-none bg-white text-sm">
+                            <select name="support" class="support-select w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-navy-900 focus:outline-none bg-white text-sm">
                                 <option value="">-- เลือกสิ่งสนับสนุน --</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex justify-end space-x-3 pt-4 border-t">
-                    <button type="button" onclick="closeAddActivityModal()" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition text-sm font-medium">ยกเลิก</button>
-                    <button type="submit" id="submit-btn" class="px-6 py-2.5 bg-primary text-white rounded-xl hover:bg-blue-800 transition text-sm font-medium shadow-md">บันทึกกิจกรรม</button>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeAddActivityModal()" class="px-5 py-2.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition text-sm font-medium">ยกเลิก</button>
+                    <button type="submit" id="submit-btn" class="px-6 py-2.5 bg-brandOrange-500 hover:bg-brandOrange-600 text-white rounded-xl transition text-sm font-semibold">บันทึกกิจกรรม</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal: Card รายละเอียดกิจกรรม -->
-    <div id="eventModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 backdrop-blur-xs">
-        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden transform transition-all">
-            <div class="bg-gradient-to-r from-blue-700 to-primary p-6 text-white relative">
-                <button onclick="closeModal()" class="absolute top-4 right-4 text-white/80 hover:text-white w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition">&times;</button>
-                <span class="text-xs uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full font-medium" id="modal-dept">-</span>
+    <!-- Modal: Card รายละเอียดกิจกรรม (Minimal Navy & Orange) -->
+    <div id="eventModal" class="fixed inset-0 bg-slate-900/40 hidden flex items-center justify-center p-4 z-50 backdrop-blur-xs">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all">
+            <div class="bg-navy-900 p-6 text-white relative">
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition">&times;</button>
+                <span class="text-xs tracking-wider bg-brandOrange-500 text-white px-3 py-1 rounded-full font-semibold" id="modal-dept">-</span>
                 <h3 id="modal-title" class="text-xl font-bold mt-3 leading-snug">ชื่อกิจกรรม</h3>
             </div>
-            <div class="p-6 space-y-4 text-sm text-gray-600">
-                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl">
-                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-primary flex items-center justify-center text-lg">
+            <div class="p-6 space-y-3.5 text-sm text-slate-600">
+                <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="w-9 h-9 rounded-lg bg-white text-navy-900 border border-slate-200/60 flex items-center justify-center text-base">
                         <i class="fa-regular fa-calendar-days"></i>
                     </div>
                     <div>
-                        <span class="text-xs text-gray-400 block font-medium">วันที่ปฏิบัติงาน</span>
-                        <span id="modal-date" class="font-semibold text-gray-800">-</span>
+                        <span class="text-xs text-slate-400 block">วันที่ปฏิบัติงาน</span>
+                        <span id="modal-date" class="font-semibold text-navy-900">-</span>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl">
-                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-primary flex items-center justify-center text-lg">
+                    <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="w-9 h-9 rounded-lg bg-white text-brandOrange-500 border border-slate-200/60 flex items-center justify-center text-base">
                             <i class="fa-regular fa-clock"></i>
                         </div>
                         <div>
-                            <span class="text-xs text-gray-400 block font-medium">เวลา</span>
-                            <span id="modal-time" class="font-semibold text-gray-800 text-xs">-</span>
+                            <span class="text-xs text-slate-400 block">เวลา</span>
+                            <span id="modal-time" class="font-semibold text-navy-900 text-xs">-</span>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl">
-                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-primary flex items-center justify-center text-lg">
+                    <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="w-9 h-9 rounded-lg bg-white text-navy-800 border border-slate-200/60 flex items-center justify-center text-base">
                             <i class="fa-solid fa-users"></i>
                         </div>
                         <div>
-                            <span class="text-xs text-gray-400 block font-medium">ผู้เข้าร่วม</span>
-                            <span id="modal-participants" class="font-semibold text-gray-800">- คน</span>
+                            <span class="text-xs text-slate-400 block">ผู้เข้าร่วม</span>
+                            <span id="modal-participants" class="font-semibold text-navy-900">- คน</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-3 bg-blue-50/50 border border-blue-100 rounded-2xl">
-                    <span class="text-xs text-primary font-bold block mb-1">ผู้รับผิดชอบกิจกรรม</span>
-                    <span id="modal-responsible" class="text-gray-800 font-medium">-</span>
+                <div class="p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                    <span class="text-xs text-slate-400 font-semibold block mb-1">ผู้รับผิดชอบกิจกรรม</span>
+                    <span id="modal-responsible" class="text-navy-900 font-semibold">-</span>
                 </div>
 
-                <div class="p-3 bg-green-50/50 border border-green-100 rounded-2xl">
-                    <span class="text-xs text-green-700 font-bold block mb-1">สิ่งสนับสนุน</span>
-                    <span id="modal-supports" class="text-gray-800 font-medium">-</span>
+                <div class="p-3.5 bg-brandOrange-50/50 border border-brandOrange-100 rounded-xl">
+                    <span class="text-xs text-brandOrange-600 font-semibold block mb-1">สิ่งสนับสนุน</span>
+                    <span id="modal-supports" class="text-navy-900 font-medium">-</span>
                 </div>
             </div>
-            <div class="p-4 bg-gray-50 border-t flex justify-end">
-                <button onclick="closeModal()" class="w-full py-2.5 bg-primary text-white rounded-xl hover:bg-blue-800 transition font-medium shadow">ปิดหน้าต่าง</button>
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <button onclick="closeModal()" class="w-full py-2.5 bg-navy-900 text-white rounded-xl hover:bg-navy-800 transition text-sm font-medium">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal: บันทึกสำเร็จ -->
-    <div id="successModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50 backdrop-blur-xs">
-        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 text-center space-y-4 transform transition-all">
-            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner animate-bounce">
+    <!-- Modal: บันทึกสำเร็จ (Minimal Navy & Orange) -->
+    <div id="successModal" class="fixed inset-0 bg-slate-900/40 hidden flex items-center justify-center p-4 z-50 backdrop-blur-xs">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-xl border border-slate-100 p-6 text-center space-y-4 transform transition-all">
+            <div class="w-16 h-16 bg-brandOrange-50 text-brandOrange-500 rounded-2xl flex items-center justify-center mx-auto text-3xl border border-brandOrange-100">
                 <i class="fa-solid fa-check"></i>
             </div>
             <div class="space-y-1">
-                <h3 class="text-xl font-bold text-gray-800">บันทึกข้อมูลสำเร็จ!</h3>
-                <p class="text-sm text-gray-500">ระบบได้บันทึกข้อมูลและอัปเดตปฏิทินเรียบร้อยแล้วครับ</p>
+                <h3 class="text-lg font-bold text-navy-900">บันทึกข้อมูลสำเร็จ!</h3>
+                <p class="text-xs text-slate-500">ระบบได้บันทึกข้อมูลและอัปเดตเรียบร้อยแล้ว</p>
             </div>
-            <button onclick="closeSuccessModal()" class="w-full py-3 bg-green-600 text-white rounded-2xl font-semibold hover:bg-green-700 transition shadow-lg shadow-green-600/30">
+            <button onclick="closeSuccessModal()" class="w-full py-2.5 bg-navy-900 text-white rounded-xl text-sm font-semibold hover:bg-navy-800 transition">
                 ตกลง
             </button>
         </div>
