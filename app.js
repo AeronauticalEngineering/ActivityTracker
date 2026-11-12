@@ -25,10 +25,15 @@ function switchTab(tab) {
         document.getElementById('tab-form').classList.remove('hidden');
         document.getElementById('btn-form').className = 'w-full text-left px-4 py-2.5 rounded-lg bg-blue-800 transition flex items-center space-x-3';
         document.getElementById('btn-dashboard').className = 'w-full text-left px-4 py-2.5 rounded-lg hover:bg-blue-800 transition flex items-center space-x-3';
-        document.getElementById('page-title').innerText = 'บันทึกผู้รับผิดชอบ';
+        document.getElementById('page-title').innerText = 'บันทึกผู้รับผิดชอบใหม่';
+    }
+    // ปิดเมนวมือถือเมื่อกดเปลี่ยนหน้า
+    if (window.innerWidth < 768) {
+        toggleMobileMenu();
     }
 }
 
+// โหลดรายชื่อผู้รับผิดชอบมาใส่ Dropdown
 async function loadUsersToDropdown() {
     if (!API_URL) return;
     try {
@@ -55,6 +60,7 @@ async function loadUsersToDropdown() {
     }
 }
 
+// เพิ่มแถว Dropdown ผู้รับผิดชอบ
 function addResponsibleField() {
     let container = document.getElementById('responsible-container');
     let div = document.createElement('div');
@@ -90,6 +96,40 @@ function addResponsibleField() {
     container.appendChild(div);
 }
 
+// บันทึก User ใหม่ลงฐานข้อมูล (users sheet)
+async function submitUserForm(e) {
+    e.preventDefault();
+    let btn = document.getElementById('user-submit-btn');
+    btn.innerText = "กำลังบันทึก...";
+    btn.disabled = true;
+
+    let payload = {
+        type: "addUser",
+        displayName: document.getElementById('newDisplayName').value,
+        username: document.getElementById('newUsername').value
+    };
+
+    try {
+        await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+        });
+
+        alert("บันทึกผู้รับผิดชอบใหม่สำเร็จ!");
+        document.getElementById('userForm').reset();
+        loadUsersToDropdown();
+        switchTab('dashboard');
+    } catch (error) {
+        console.error("Error saving user:", error);
+        alert("เกิดข้อผิดพลาดในการบันทึก");
+    } finally {
+        btn.innerText = "บันทึกผู้รับผิดชอบ";
+        btn.disabled = false;
+    }
+}
+
 function initCalendar() {
     var calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
@@ -108,6 +148,10 @@ function initCalendar() {
             month: 'เดือน',
             week: 'สัปดาห์',
             list: 'กำหนดการ'
+        },
+        datesSet: function(info) {
+            // อัปเดตตารางรายการกิจกรรมตามเดือนที่แสดงบนปฏิทิน
+            updateMonthlyTable(allEvents, info.view.currentStart);
         },
         events: [],
         eventClick: function(info) {
@@ -130,6 +174,9 @@ async function fetchActivityData() {
             allEvents = result.data;
             updateCalendarEvents(allEvents);
             calculateWorkload(allEvents);
+            if (calendar) {
+                updateMonthlyTable(allEvents, calendar.getDate());
+            }
         }
     } catch (error) {
         console.error("Error fetching data:", error);
@@ -175,6 +222,52 @@ function updateCalendarEvents(data) {
     events.forEach(event => calendar.addEvent(event));
 }
 
+// อัปเดตตารางรายการกิจกรรมประจำเดือนใต้ปฏิทิน
+function updateMonthlyTable(data, currentDate) {
+    let year = currentDate.getFullYear();
+    let month = currentDate.getMonth();
+
+    const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+    document.getElementById('current-month-label').innerText = `ประจำเดือน ${thaiMonths[month]} ${year + 543}`;
+
+    let filtered = data.filter(item => {
+        if (!item.date) return false;
+        let d = new Date(item.date);
+        return d.getFullYear() === year && d.getMonth() === month;
+    });
+
+    // เรียงลำดับตามวันที่
+    filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    let tbody = document.getElementById('monthly-activity-table');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">ยังไม่มีข้อมูลกิจกรรมในเดือนนี้</td></tr>`;
+        return;
+    }
+
+    filtered.forEach(item => {
+        let parts = item.date.split('-');
+        let formattedDate = `${parts[2]}/${parts[1]}/${Number(parts[0]) + 543}`;
+        let timeStr = `${item.startTime} - ${item.endTime} น.`;
+
+        let tr = document.createElement('tr');
+        tr.className = "hover:bg-blue-50/50 transition cursor-pointer";
+        tr.onclick = function() { showModal(item); };
+        
+        tr.innerHTML = `
+            <td class="p-3 font-medium text-gray-800">${formattedDate}</td>
+            <td class="p-3 text-gray-600">${timeStr}</td>
+            <td class="p-3 font-semibold text-primary">${item.activityName}</td>
+            <td class="p-3 text-gray-600">${item.department || '-'}</td>
+            <td class="p-3 text-gray-700">${item.responsible || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
 function calculateWorkload(data) {
     let workloadMap = {};
 
@@ -215,12 +308,12 @@ function calculateWorkload(data) {
 }
 
 function showModal(data) {
-    document.getElementById('modal-title').innerText = data.activityName;
-    document.getElementById('modal-dept').innerText = data.department;
-    document.getElementById('modal-date').innerText = data.date;
-    document.getElementById('modal-time').innerText = data.time;
-    document.getElementById('modal-participants').innerText = data.participants;
-    document.getElementById('modal-responsible').innerText = data.responsible;
+    document.getElementById('modal-title').innerText = data.activityName || "รายละเอียดกิจกรรม";
+    document.getElementById('modal-dept').innerText = data.department || "-";
+    document.getElementById('modal-date').innerText = data.date || "-";
+    document.getElementById('modal-time').innerText = `${data.startTime || '00:00'} - ${data.endTime || '23:59'} น.`;
+    document.getElementById('modal-participants').innerText = data.participants || "0";
+    document.getElementById('modal-responsible').innerText = data.responsible || "-";
     document.getElementById('eventModal').classList.remove('hidden');
 }
 
@@ -228,36 +321,7 @@ function closeModal() {
     document.getElementById('eventModal').classList.add('hidden');
 }
 
-function showSuccessModal() {
-    let modal = document.getElementById('successModal');
-    if (!modal) {
-        const modalHTML = `
-            <div id="successModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-                <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center space-y-4">
-                    <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-3xl font-bold">
-                        ✓
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800">บันทึกข้อมูลสำเร็จ!</h3>
-                    <p class="text-sm text-gray-500">ระบบได้บันทึกข้อมูลและอัปเดตปฏิทินเรียบร้อยแล้วครับ</p>
-                    <button onclick="closeSuccessModal()" class="w-full py-2.5 bg-primary text-white rounded-xl font-medium hover:bg-blue-900 transition shadow-md">
-                        ตกลง
-                    </button>
-                </div>
-            </div>`;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        modal = document.getElementById('successModal');
-    }
-    modal.classList.remove('hidden');
-}
-
-function closeSuccessModal() {
-    const modal = document.getElementById('successModal');
-    if (modal) modal.classList.add('hidden');
-    switchTab('dashboard');
-    fetchActivityData();
-}
-
-async function submitForm(e) {
+async function submitActivityForm(e) {
     e.preventDefault();
     let btn = document.getElementById('submit-btn');
     btn.innerText = "กำลังบันทึก...";
@@ -297,14 +361,13 @@ async function submitForm(e) {
         await fetch(API_URL, {
             method: 'POST',
             mode: 'no-cors',
-            headers: {
-                'Content-Type': 'text/plain'
-            },
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(payload)
         });
 
         document.getElementById('activityForm').reset();
-        showSuccessModal();
+        closeAddActivityModal();
+        alert("บันทึกกิจกรรมสำเร็จ!");
 
         setTimeout(async () => {
             await fetchActivityData();
@@ -314,7 +377,7 @@ async function submitForm(e) {
         console.error("Error submitting form:", error);
         alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     } finally {
-        btn.innerText = "บันทึกข้อมูล";
+        btn.innerText = "บันทึกกิจกรรม";
         btn.disabled = false;
     }
 }
