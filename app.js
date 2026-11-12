@@ -50,7 +50,6 @@ function switchTab(tab) {
     }
 }
 
-// โหลดรายชื่อผู้รับผิดชอบ
 async function loadUsersToDropdown() {
     if (!API_URL) return;
     try {
@@ -76,7 +75,6 @@ async function loadUsersToDropdown() {
     }
 }
 
-// โหลดรายชื่อสิ่งสนับสนุน
 async function loadSupportsToDropdown() {
     if (!API_URL) return;
     try {
@@ -167,7 +165,6 @@ function addSupportField() {
     container.appendChild(div);
 }
 
-// บันทึก User ใหม่ (ไม่มีช่อง Username)
 async function submitUserForm(e) {
     e.preventDefault();
     let btn = document.getElementById('user-submit-btn');
@@ -199,7 +196,6 @@ async function submitUserForm(e) {
     }
 }
 
-// บันทึก Support ใหม่
 async function submitSupportForm(e) {
     e.preventDefault();
     let btn = document.getElementById('support-submit-btn');
@@ -370,6 +366,8 @@ function updateMonthlyTable(data, currentDate) {
 
 function calculateWorkload(data) {
     let workloadMap = {};
+    let totalHoursSum = 0;
+    let totalActivities = data.length;
 
     data.forEach(item => {
         let durationHours = Number(item.workHours) || 0;
@@ -381,6 +379,16 @@ function calculateWorkload(data) {
             }
         });
     });
+
+    // คำนวณชั่วโมงรวมทั้งหมด
+    for (let hours of Object.values(workloadMap)) {
+        totalHoursSum += hours;
+    }
+
+    // อัปเดตตัวเลข Summary Cards ด้านบน
+    document.getElementById('stat-total-activities').innerText = totalActivities;
+    document.getElementById('stat-total-hours').innerText = totalHoursSum.toFixed(1);
+    document.getElementById('stat-total-persons').innerText = Object.keys(workloadMap).length;
 
     let container = document.getElementById('workload-summary');
     if (!container) return;
@@ -456,7 +464,6 @@ async function submitActivityForm(e) {
     }
     let calcHours = Math.max(0, (endMins - startMins) / 60);
 
-    // รวบรวมผู้รับผิดชอบ
     let responsibleSelects = document.querySelectorAll('.responsible-select');
     let responsibleArray = [];
     responsibleSelects.forEach(sel => {
@@ -464,7 +471,6 @@ async function submitActivityForm(e) {
     });
     let combinedResponsible = responsibleArray.join(', ');
 
-    // รวบรวมสิ่งสนับสนุน
     let supportSelects = document.querySelectorAll('.support-select');
     let supportArray = [];
     supportSelects.forEach(sel => {
