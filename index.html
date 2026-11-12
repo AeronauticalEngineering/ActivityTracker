@@ -98,11 +98,22 @@
         .fc .fc-daygrid-day.fc-day-today {
             background-color: #fff7ed;
         }
+
+        /* ตกแต่งแถบกิจกรรมในช่องปฏิทินให้เป็นสีส้มโดดเด่น อ่านง่าย */
         .fc-event {
-            border-radius: 6px;
-            padding: 2px 4px;
-            font-size: 0.75rem;
-            border: none;
+            background-color: #f97316 !important;
+            border-color: #ea580c !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            border-radius: 6px !important;
+            padding: 3px 6px !important;
+            box-shadow: 0 2px 4px rgba(249, 115, 22, 0.2);
+        }
+        .fc-event:hover {
+            background-color: #ea580c !important;
+        }
+        .fc-event-title {
+            font-size: 0.8rem !important;
         }
     </style>
 </head>
@@ -207,7 +218,7 @@
                                     <th class="p-2.5 md:p-3 font-semibold whitespace-nowrap">ชื่อกิจกรรม</th>
                                     <th class="p-2.5 md:p-3 font-semibold whitespace-nowrap">ฝ่าย / หน่วยงาน</th>
                                     <th class="p-2.5 md:p-3 font-semibold whitespace-nowrap">ผู้รับผิดชอบ</th>
-                                    <th class="p-2.5 md:p-3 font-semibold whitespace-nowrap">สิ่งสนับสนุน</th>
+                                    <th class="p-2.5 md:p-3 font-semibold whitespace-nowrap">ห้องปฏิบัติการ / สิ่งสนับสนุน</th>
                                 </tr>
                             </thead>
                             <tbody id="monthly-activity-table" class="divide-y divide-slate-100 text-slate-700">
@@ -382,7 +393,7 @@
         </div>
     </div>
 
-    <!-- Modal: Card รายละเอียดกิจกรรม (พร้อมปุ่มแก้ไขและลบ) -->
+    <!-- Modal: Card รายละเอียดกิจกรรม -->
     <div id="eventModal" class="fixed inset-0 bg-slate-900/40 hidden flex items-center justify-center p-4 z-50 backdrop-blur-xs">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all">
             <div class="bg-navy-900 p-6 text-white relative">
