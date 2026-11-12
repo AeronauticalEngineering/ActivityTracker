@@ -382,7 +382,7 @@
         </div>
     </div>
 
-    <!-- Modal: Card รายละเอียดกิจกรรม (พร้อมปุ่มแก้ไข) -->
+    <!-- Modal: Card รายละเอียดกิจกรรม (พร้อมปุ่มแก้ไขและลบ) -->
     <div id="eventModal" class="fixed inset-0 bg-slate-900/40 hidden flex items-center justify-center p-4 z-50 backdrop-blur-xs">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all">
             <div class="bg-navy-900 p-6 text-white relative">
@@ -432,11 +432,14 @@
                     <span id="modal-supports" class="text-navy-900 font-medium">-</span>
                 </div>
             </div>
-            <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2">
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex flex-wrap gap-2">
                 <button onclick="openEditActivityModal()" class="flex-1 py-2.5 bg-brandOrange-500 text-white rounded-xl hover:bg-brandOrange-600 transition text-sm font-semibold flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-pen-to-square"></i><span>แก้ไขกิจกรรม</span>
+                    <i class="fa-solid fa-pen-to-square"></i><span>แก้ไข</span>
                 </button>
-                <button onclick="closeModal()" class="flex-1 py-2.5 bg-navy-900 text-white rounded-xl hover:bg-navy-800 transition text-sm font-medium">ปิดหน้าต่าง</button>
+                <button onclick="deleteActivity()" class="px-4 py-2.5 bg-red-50 text-red-600 border border-red-200 rounded-xl hover:bg-red-100 transition text-sm font-semibold flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-trash"></i><span>ลบ</span>
+                </button>
+                <button onclick="closeModal()" class="flex-1 py-2.5 bg-navy-900 text-white rounded-xl hover:bg-navy-800 transition text-sm font-medium">ปิด</button>
             </div>
         </div>
     </div>
@@ -448,8 +451,8 @@
                 <i class="fa-solid fa-check"></i>
             </div>
             <div class="space-y-1">
-                <h3 class="text-lg font-bold text-navy-900">บันทึกข้อมูลสำเร็จ!</h3>
-                <p class="text-xs text-slate-500">ระบบได้บันทึกข้อมูลและอัปเดตเรียบร้อยแล้ว</p>
+                <h3 class="text-lg font-bold text-navy-900">ดำเนินการสำเร็จ!</h3>
+                <p class="text-xs text-slate-500">ระบบได้บันทึกและอัปเดตข้อมูลเรียบร้อยแล้ว</p>
             </div>
             <button onclick="closeSuccessModal()" class="w-full py-2.5 bg-navy-900 text-white rounded-xl text-sm font-semibold hover:bg-navy-800 transition">
                 ตกลง
